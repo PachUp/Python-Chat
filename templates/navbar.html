@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
+<link href="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <title>Chat</title>
+    {% block head%}{% endblock %}
+</head>
+<body>
+    <div class="bs-example this-is-navbar" >
+        <nav class="navbar navbar-expand-md navbar-light bg-light this-is-navbar">
+            <a class="navbar-brand this-is-navbar">Chat</a>
+            <button type="button" class="navbar-toggler this-is-navbar" data-toggle="collapse" data-target="#navbarCollapse">
+                <span class="navbar-toggler-icon this-is-navbar"></span>
+            </button>
+    
+            <div class="collapse navbar-collapse justify-content-between this-is-navbar" id="navbarCollapse">
+                <div class="navbar-nav this-is-navbar">
+                    <a href="127.0.0.1:5000" class="nav-item nav-link active this-is-navbar">Home</a>
+                    <div class="nav-item dropdown this-is-navbar dropdown-nevbar">
+                        <a href="#" class="nav-link dropdown-toggle this-is-navbar" data-toggle="dropdown">Rooms</a>
+                        <div class="dropdown-menu dropdown-menu-nevbar this-is-navbar">
+                            {% for i in rooms %}
+                            <a class="dropdown-item this-is-navbar room">{{i}}</a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div class="navbar-nav this-is-navbar">
+                    <a href="127.0.0.1:5000" class="nav-item nav-link this-is-navbar">Logout</a>
+                </div>
+            </div>
+        </nav>
+    </div>
+    {% block body%}{% endblock %}
+</body>
+</html>
+<style>
+    .bs-example{
+        margin: 20px;
+    }
+</style>
+<script>
+$('.dropdown-nevbar').on('show.bs.dropdown', function() {
+    $(this).find('.dropdown-menu-nevbar').first().stop(true, true).slideDown();
+  });
+
+  // Add slideUp animation to Bootstrap dropdown when collapsing.
+  $('.dropdown-nevbar').on('hide.bs.dropdown', function() {
+    $(this).find('.dropdown-menu-nevbar').first().stop(true, true).slideUp();
+  });
+</script>

@@ -4,9 +4,10 @@ from flask_socketio import SocketIO, send, join_room, leave_room, emit
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'topsecret'
 socketio = SocketIO(app)
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///foo.db"
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///foo1.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
+public_rooms = ["Vanila", "Chocolate"]
 class AllHistory(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     message = db.Column(db.TEXT)
@@ -14,7 +15,7 @@ class AllHistory(db.Model):
 @app.route("/", methods=["GET"])
 def index():
     all_msg = AllHistory.query.all()
-    return render_template("index.html", msgs="")
+    return render_template("index.html", msgs="", rooms=public_rooms)
 
 @socketio.on('message')
 def handle_message(message):
@@ -25,6 +26,7 @@ def handle_message(message):
         room=message["room"]
         send("From room" + room + " Message: " + message["message"], room=room)
     except:
+        print(type(message))
         send("All: " + message, broadcast=True)
 
 @socketio.on('message', namespace="/room")
@@ -53,4 +55,4 @@ def on_leave(data):
 
 
 if __name__ == "__main__":
-    socketio.run(app)
+    socketio.run(app, debug=True)
