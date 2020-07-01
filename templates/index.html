@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
+<link href="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+</head>
+<body>
+    <div id="items">
+        {% for i in msgs %}
+            <p>{{i.message}}</p>
+        {% endfor %}
+        <p id="mess"></p>
+        <input type="text" id="input">
+        <button id="send">Send</button>
+    </div>
+    <button class="room">Vanila</button>
+    <button class="room">Chocolate</button>
+</body>
+</html>
+
+<script>
+    room = ""
+    var socket = io("http://127.0.0.1:5000");
+    var join_room = false;
+    socket.on('connect', function() {
+        socket.send("Connected!")
+    });
+    socket.on("message", function(msg){ // listioner on "message"
+        console.log(socket)
+        console.log("recived")
+        $("#mess").append("<il>" + msg + "</il><br>")
+    });
+
+    $("#send").click(function(){
+        console.log(join_room)
+        if(join_room){
+            console.log("Room")
+            socket.send({"message" : $("#input").val(), "room" : room})
+        }
+        else{
+            socket.send($("#input").val());
+        }
+    });
+    $(".room").click(function(event){
+        var new_room = $(event.target).text()
+        console.log(new_room);
+        if(room == new_room){
+            socket = io("http://127.0.0.1:5000");
+            alert("You are already in the room!")
+        }
+        else{
+            join_room = true;
+            socket.emit('leave', {"room" : room})
+            socket.emit("join", {"room" : new_room})
+            alert("You join " + new_room)
+            room = new_room
+        }
+    });
+</script>
+<style>
+    #items{
+        text-align: center;
+        align-self: center;
+    }
+</style>
