@@ -24,7 +24,7 @@ def handle_message(message):
     #db.session.commit()
     try:
         room=message["room"]
-        send("From room" + room + " Message: " + message["message"], room=room)
+        send("From room " + room + " Message: " + message["message"], room=room)
     except:
         print(type(message))
         send("All: " + message, broadcast=True)
