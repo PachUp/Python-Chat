@@ -29,8 +29,14 @@ class all_rooms(db.Model):
 @app.route("/", methods=["GET"])
 @login_required
 def index():
-
-    return render_template("index.html", msgs="", rooms=public_rooms)
+    print("index")
+    rooms = all_rooms.query.all()
+    all_rooms_l = ["Main"]
+    for i in rooms:
+        print(i)
+        print(i.rooms)
+        all_rooms_l.append(i.rooms)
+    return render_template("index.html", msgs="", rooms=all_rooms_l)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -137,18 +143,25 @@ def handle_message(data):
 
 @socketio.on('add')
 def add(data):
+    print("adding")
     room_name = data["name"]
+    if room_name.lower() == "main":
+        room_exist = True
     rooms_obj = all_rooms.query.all()
     room_exist = False
     for i in rooms_obj:
-        if i.room_name == room_name:
+        if i.rooms.lower() == room_name.lower():
             room_exist = True
     if room_exist is False:
+        print("adding a room")
         owner = current_user.username
         room_password = data["password"] # None for now
-        add_new_room = all_rooms(rooms= room_name, room_password= room_password, owner= owner)
+        add_new_room = all_rooms(rooms= room_name, room_password= room_password, room_owner= owner)
         db.session.add(add_new_room)
         db.session.commit()
+        emit("add", room_name)
+    else:
+        emit("add", "Room already exists")
 
 @socketio.on('join')
 def on_join(data):

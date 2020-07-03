@@ -1,5 +1,9 @@
 {% extends 'navbar.html' %}
-{% block head%}{% endblock %}
+{% block head%}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
+{% endblock %}
 {% block body%}
     <!--
     <div id="items">
@@ -125,6 +129,22 @@
       </div>
     
 <script>
+toastr.options = {
+  "closeButton": true,
+  "debug": false,
+  "newestOnTop": true,
+  "progressBar": true,
+  "positionClass": "toast-top-right",
+  "preventDuplicates": false,
+  "showDuration": "300",
+  "hideDuration": "1000",
+  "timeOut": "6500",
+  "extendedTimeOut": "1000",
+  "showEasing": "swing",
+  "hideEasing": "linear",
+  "showMethod": "fadeIn",
+  "hideMethod": "fadeOut"
+}
     room = "Main"
     var socket = io("http://127.0.0.1:5000");
     socket.on('connect', function() {
@@ -164,39 +184,57 @@
                     </li>`
         $("#messages").append(create_msg)
     });
+    socket.on("add", function(msg){
+      console.log("add")
+      if(msg != "Room already exists"){
+        $(".dropdown-menu").append('<a class="dropdown-item this-is-navbar room">' + msg + '</a>')
+        toastr["success"]("Your room has successfully created", "Room created")
+      }
+      else{
+        toastr["error"]("it seems like the room already exists", "Can't create the room")
+      }
+    });
     $(document).ready(function(){
       socket.emit("join", {"room" : room})
     });
     $("#send").click(function(){
         console.log(room)
+        console.log("SEnd")
         var inp = $("#input").val();
         inp = htmlEntities(inp);
+        console.log(inp);
         socket.send({"message" : inp, "room" : room})
     });
-    $(".room").click(function(event){
+    $(".dropdown-menu").on('click', '.room', function(event){ // I have to use the .on method because .click doesn't work when data is appended
+        console.log("Room clicked")
         var new_room = $(event.target).text()
         console.log(new_room);
         if(room == new_room){
+            console.log("Exist!!!!")
             socket = io("http://127.0.0.1:5000");
-            alert("You are already in the room!")
+            toastr["error"]("You are already in the room", "Can't join the room")
         }
         else{
             $("#messages").html("");
             socket.emit('leave', {"room" : room})
             socket.emit("join", {"room" : new_room})
-            alert("You joined " + new_room)
+            var room_msg = "You have joined " + new_room
+            toastr["success"](room_msg, "Room joined")
             room = new_room
         }
     });
 
     $("#new-room").click(function(){
       var created_room = $("#new-room-input").val();
-      $("#new-room-input").html("");
-      socket.emit('add', {"name" : room, "password" : "None"})
+      $("#new-room-input").val("");
+      $("#messages").html("");
+      socket.emit('add', {"name" : created_room, "password" : "None"})
       socket.emit('leave', {"room" : room})
       socket.emit("join", {"room" : created_room})
-      alert("You joined " + created_room)
+      var room_msg = "You have joined " + created_room
+      toastr["success"](room_msg, "Room joined")
       room = created_room
+      $("#modalAddRoom .close").click()
     });
 
     function addNewlines(str) {
