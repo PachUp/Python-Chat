@@ -11,7 +11,7 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
-public_rooms = ["Vanila", "Chocolate"]
+public_rooms = ["Vanila", "Chocolate", "Main"] # const value
 class AllHistory(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     message = db.Column(db.TEXT)
@@ -27,7 +27,7 @@ class users(db.Model, UserMixin):
 def index():
         all_msg = AllHistory.query.all()
         print(current_user.username)
-        return render_template("index.html", msgs="", rooms=public_rooms, username=current_user.username)
+        return render_template("index.html", msgs="", rooms=public_rooms)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -115,14 +115,14 @@ def handle_message(message):
     #db.session.add(new_msg)
     #db.session.commit()
     try:
+        print("In room")
         room=message["room"]
-        send("From room " + room + " Message: " + message["message"], room=room)
+        print(message["room"])
+        send({"msg" : message["message"], "user" : current_user.username}, room=room)
     except:
         print(type(message))
         if message == "Connected!":
             send(current_user.username +" Has " + message)
-        else:
-            send("All: " + message, broadcast=True)
 
 @socketio.on('message', namespace="/room")
 def handle_message(data):

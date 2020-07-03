@@ -95,25 +95,35 @@
       </div>
     
 <script>
-    room = ""
+    room = "Main"
     var socket = io("http://127.0.0.1:5000");
-    var join_room = false;
     socket.on('connect', function() {
         socket.send("Connected!")
     });
-    socket.on("message", function(msg){ // add connected handler
-        msg = addNewlines(msg)
-        console.log(socket)
+    socket.on("message", function(obj){ // add connected handler
+        console.log(obj)
+        try{
+          console.log(typeof(obj))
+          msg = addNewlines(obj["msg"])
+          username = obj["user"]
+        }
+        catch(err){
+          console.log(typeof(obj))
+          msg = addNewlines(obj)
+          username = "Server"
+        }
         console.log("recived")
+        console.log(msg)
+        console.log(username)
         var create_msg = `<li class="d-flex justify-content-between mb-4">
                         <div class="chat-body white p-3 ml-2 z-depth-1">
                             <div class="header">
-                                <strong class="primary-font">{{username}}</strong>
+                                <strong class="primary-font">`+ username +`</strong>
                                 <small class="pull-right text-muted"><i class="far fa-clock"></i>min ago</small>
                             </div>
                             <hr class="w-100">
                             <p id="new-msg">` + 
-                                msg 
+                                msg
                                 +
                                 `
                             </p>
@@ -121,17 +131,12 @@
                     </li>`
         $("#messages").append(create_msg)
     });
-
+    $(document).ready(function(){
+      socket.emit("join", {"room" : room})
+    });
     $("#send").click(function(){
-        console.log(join_room)
-        if(join_room){
-            console.log("Room")
-            socket.send({"message" : $("#input").val(), "room" : room})
-        }
-        else{
-            console.log($("#input").val());
-            socket.send($("#input").val());
-        }
+        console.log(room)
+        socket.send({"message" : $("#input").val(), "room" : room})
     });
     $(".room").click(function(event){
         var new_room = $(event.target).text()
@@ -141,7 +146,6 @@
             alert("You are already in the room!")
         }
         else{
-            join_room = true;
             $("#messages").html("");
             socket.emit('leave', {"room" : room})
             socket.emit("join", {"room" : new_room})
@@ -149,6 +153,8 @@
             room = new_room
         }
     });
+
+
     function addNewlines(str) {
     var result = '';
     while (str.length > 0) {
