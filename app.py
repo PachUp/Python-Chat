@@ -6,7 +6,7 @@ from sqlalchemy import func
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'topsecret'
 socketio = SocketIO(app)
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///foo2.db"
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///db.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 login_manager = LoginManager()
@@ -16,7 +16,7 @@ class AllHistory(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     message = db.Column(db.TEXT)
 
-class users(db.Model):
+class users(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key = True)
     username = db.Column(db.TEXT)
     password = db.Column(db.TEXT)
@@ -26,7 +26,8 @@ class users(db.Model):
 @login_required
 def index():
         all_msg = AllHistory.query.all()
-        return render_template("index.html", msgs="", rooms=public_rooms)
+        print(current_user.username)
+        return render_template("index.html", msgs="", rooms=public_rooms, username=current_user.username)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -51,8 +52,6 @@ def login():
         else:
             user = users.query.filter_by(username=username,password=password).first()
             db.session.commit()
-            if user.email_authentication == False:
-                return "email"
             app.permanent_session_lifetime = False
             if check_box == "True": #always true for now
                 login_user(user, remember=True)
@@ -67,6 +66,10 @@ def login():
         else:
             return render_template('/login.html')
 
+@app.route("/logout")
+def logout():
+    logout_user()
+    return redirect("/")
 
 @app.route("/register", methods=["GET","POST"])
 def register():
@@ -76,14 +79,6 @@ def register():
         email = request.form['email']
         print(username)
         send = ""
-        computer = users.query.filter(func.lower(users.username) == func.lower(username)).first()
-        print(computer)
-        if computer is not None:
-            print("in")
-            now = datetime.datetime.now()
-            if now - computer.registered_date > datetime.timedelta(seconds= 300) and computer.email_authentication is False:
-                db.session.delete(computer)
-                db.session.commit()
         user_check = bool(users.query.filter(func.lower(users.username) == func.lower(username)).first())
         email_check = bool(users.query.filter_by(email=email).first())
         
@@ -103,6 +98,9 @@ def register():
         elif user_check:
             return "username exist"
         else:
+            new_user = users(username = username, password=password, email=email)
+            db.session.add(new_user)
+            db.session.commit()
             return redirect('/')
     if request.method == "GET":
         if current_user.is_authenticated:
@@ -121,12 +119,16 @@ def handle_message(message):
         send("From room " + room + " Message: " + message["message"], room=room)
     except:
         print(type(message))
-        send("All: " + message, broadcast=True)
+        if message == "Connected!":
+            send(current_user.username +" Has " + message)
+        else:
+            send("All: " + message, broadcast=True)
 
 @socketio.on('message', namespace="/room")
 def handle_message(data):
     if data == "Connected!":
-        send(data)
+        print("g")
+        send(current_user.username +" Has " + data)
     else:
         print('received message room: ' + data["message"] + " from room " + data["room"])
         send(data["message"], room=data["room"])
@@ -137,7 +139,7 @@ def on_join(data):
     room = data['room']
     print("join " + room)
     join_room(room)
-    send('has entered ' + room, room=room)
+    send(current_user.username +' has entered ' + room, room=room)
 
 @socketio.on('leave')
 def on_leave(data):

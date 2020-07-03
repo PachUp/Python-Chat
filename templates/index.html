@@ -27,7 +27,7 @@
                             <li class="d-flex justify-content-between mb-4">
                                 <div class="chat-body white p-3 ml-2 z-depth-1">
                                     <div class="header">
-                                        <strong class="primary-font">Name</strong>
+                                        <strong class="primary-font">{{username}}</strong>
                                         <small class="pull-right text-muted"><i class="far fa-clock"></i>min ago</small>
                                     </div>
                                     <hr class="w-100">
@@ -101,14 +101,14 @@
     socket.on('connect', function() {
         socket.send("Connected!")
     });
-    socket.on("message", function(msg){ // listioner on "message"
+    socket.on("message", function(msg){ // add connected handler
         msg = addNewlines(msg)
         console.log(socket)
         console.log("recived")
         var create_msg = `<li class="d-flex justify-content-between mb-4">
                         <div class="chat-body white p-3 ml-2 z-depth-1">
                             <div class="header">
-                                <strong class="primary-font">Name</strong>
+                                <strong class="primary-font">{{username}}</strong>
                                 <small class="pull-right text-muted"><i class="far fa-clock"></i>min ago</small>
                             </div>
                             <hr class="w-100">
@@ -152,8 +152,8 @@
     function addNewlines(str) {
     var result = '';
     while (str.length > 0) {
-        result = result + str.substring(0, 150) + '\n';
-        str = str.substring(150);
+        result = result + str.substring(0, 120) + '\n';
+        str = str.substring(120);
     }
     return result;
     }
