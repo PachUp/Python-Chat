@@ -145,7 +145,7 @@
             $("#messages").html("");
             socket.emit('leave', {"room" : room})
             socket.emit("join", {"room" : new_room})
-            alert("You join " + new_room)
+            alert("You joined " + new_room)
             room = new_room
         }
     });
