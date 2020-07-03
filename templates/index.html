@@ -115,6 +115,9 @@
         console.log("recived")
         console.log(msg)
         console.log(username)
+        var entites = "";
+        $(entites).html(msg)
+        console.log(entites)
         var create_msg = `<li class="d-flex justify-content-between mb-4">
                         <div class="chat-body white p-3 ml-2 z-depth-1">
                             <div class="header">
@@ -136,7 +139,9 @@
     });
     $("#send").click(function(){
         console.log(room)
-        socket.send({"message" : $("#input").val(), "room" : room})
+        var inp = $("#input").val();
+        inp = htmlEntities(inp);
+        socket.send({"message" : inp, "room" : room})
     });
     $(".room").click(function(event){
         var new_room = $(event.target).text()
@@ -162,6 +167,9 @@
         str = str.substring(120);
     }
     return result;
+    }
+    function htmlEntities(str) {
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 </script>
 <style>
