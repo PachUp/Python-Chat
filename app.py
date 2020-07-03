@@ -6,15 +6,12 @@ from sqlalchemy import func
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'topsecret'
 socketio = SocketIO(app)
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///db.db"
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///db3.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
-public_rooms = ["Vanila", "Chocolate", "Main"] # const value
-class AllHistory(db.Model):
-    id = db.Column(db.Integer, primary_key = True)
-    message = db.Column(db.TEXT)
+public_rooms = ["Vanila", "Chocolate", "Main"] # need to be inside the db
 
 class users(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key = True)
@@ -22,12 +19,18 @@ class users(db.Model, UserMixin):
     password = db.Column(db.TEXT)
     email = db.Column(db.TEXT)
 
+class all_rooms(db.Model):
+    id = db.Column(db.Integer, primary_key = True)
+    room_messages = db.Column(db.TEXT) # create one to many relationship to present the messages
+    rooms = db.Column(db.TEXT) # change name to room
+    room_password = db.Column(db.TEXT)
+    room_owner = db.Column(db.TEXT)
+
 @app.route("/", methods=["GET"])
 @login_required
 def index():
-        all_msg = AllHistory.query.all()
-        print(current_user.username)
-        return render_template("index.html", msgs="", rooms=public_rooms)
+
+    return render_template("index.html", msgs="", rooms=public_rooms)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -127,11 +130,25 @@ def handle_message(message):
 @socketio.on('message', namespace="/room")
 def handle_message(data):
     if data == "Connected!":
-        print("g")
         send(current_user.username +" Has " + data)
     else:
         print('received message room: ' + data["message"] + " from room " + data["room"])
         send(data["message"], room=data["room"])
+
+@socketio.on('add')
+def add(data):
+    room_name = data["name"]
+    rooms_obj = all_rooms.query.all()
+    room_exist = False
+    for i in rooms_obj:
+        if i.room_name == room_name:
+            room_exist = True
+    if room_exist is False:
+        owner = current_user.username
+        room_password = data["password"] # None for now
+        add_new_room = all_rooms(rooms= room_name, room_password= room_password, owner= owner)
+        db.session.add(add_new_room)
+        db.session.commit()
 
 @socketio.on('join')
 def on_join(data):
