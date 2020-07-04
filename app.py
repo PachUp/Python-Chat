@@ -33,8 +33,6 @@ def index():
     rooms = all_rooms.query.all()
     all_rooms_l = ["Main"]
     for i in rooms:
-        print(i)
-        print(i.rooms)
         all_rooms_l.append(i.rooms)
     return render_template("index.html", msgs="", rooms=all_rooms_l)
 

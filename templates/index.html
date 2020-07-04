@@ -28,13 +28,12 @@
           <label data-error="wrong" data-success="right" >Room name</label>
           <input class="form-control" id="new-room-input">
         </div>
-        <!-- password
         <div class="md-form mb-4">
-          <i class="fas fa-lock prefix grey-text"></i>
-          <input type="password" id="defaultForm-pass" class="form-control validate">
-          <label data-error="wrong" data-success="right" for="defaultForm-pass">Your password</label>
+          <label data-error="wrong" data-success="right">Your password</label>
+          <input type="password" id="room-password" class="form-control">  
+          <input type="checkbox" class="form-check-input" id="exampleCheck1" checked>
+          <label class="form-check-label">With password</label>
         </div>
-        -->
       </div>
       <div class="modal-footer d-flex justify-content-center">
         <button class="btn btn-default" id="new-room">Create</button>
@@ -197,13 +196,15 @@ toastr.options = {
     $(document).ready(function(){
       socket.emit("join", {"room" : room})
     });
+    $("#input").keydown(function(e){
+      if(e.keyCode == 13){ // 13 is the enter key
+        sendMessage()
+        $("#input").val("")
+      }
+    });
     $("#send").click(function(){
-        console.log(room)
-        console.log("SEnd")
-        var inp = $("#input").val();
-        inp = htmlEntities(inp);
-        console.log(inp);
-        socket.send({"message" : inp, "room" : room})
+      sendMessage()
+      $("#input").val("")
     });
     $(".dropdown-menu").on('click', '.room', function(event){ // I have to use the .on method because .click doesn't work when data is appended
         console.log("Room clicked")
@@ -211,7 +212,6 @@ toastr.options = {
         console.log(new_room);
         if(room == new_room){
             console.log("Exist!!!!")
-            socket = io("http://127.0.0.1:5000");
             toastr["error"]("You are already in the room", "Can't join the room")
         }
         else{
@@ -247,6 +247,11 @@ toastr.options = {
     }
     function htmlEntities(str) {
     return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    function sendMessage(){
+      var inp = $("#input").val();
+      inp = htmlEntities(inp);
+      socket.send({"message" : inp, "room" : room})
     }
 </script>
 <style>
