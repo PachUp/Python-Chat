@@ -19,11 +19,18 @@ class users(db.Model, UserMixin):
     password = db.Column(db.TEXT)
     email = db.Column(db.TEXT)
     notifications = db.relationship('notifications', backref='user_notification')
+    friends = db.relationship('friends', backref='user_friends')
 
 
 class notifications(db.Model): # maybe add a filter option (friend, server notification etc')
     id = db.Column(db.Integer, primary_key = True)
     notification = db.Column(db.TEXT)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id')) 
+
+
+class friends(db.Model):
+    id = db.Column(db.Integer, primary_key = True)
+    friend_name = db.Column(db.TEXT)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id')) 
 
 class all_rooms(db.Model):
@@ -51,12 +58,15 @@ def index():
     print("index")
     rooms = all_rooms.query.all()
     notifi = []
+    user_friends = []
     for i in current_user.notifications:
         notifi.append(i.notification)
+    for i in current_user.friends:
+        user_friends.append(i.friend_name)
     all_rooms_l = ["Main"]
     for i in rooms:
         all_rooms_l.append(i.rooms)
-    return render_template("index.html", msgs="", rooms=all_rooms_l, notifications=notifi)
+    return render_template("index.html", msgs="", rooms=all_rooms_l, notifications=notifi, user_friends=user_friends)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -209,6 +219,36 @@ def friend_add(data):
             emit("friend-add", "Friend request sent!")
     if not found:
         emit("friend-add", "error")
+
+@socketio.on('friend-request-handler')
+def friend_request_handler(data):
+    request_status = data["type"]
+    request_data = data["notification"]
+    print(request_status)
+    action = False
+    for i in current_user.notifications:
+        if i.notification == request_data:
+            if request_status == "Accept":
+                request_name = request_data.split(' ')[0]
+                requester = users.query.filter_by(username=request_name).first()
+                new_friend_requester = friends(friend_name=current_user.username, user_friends=requester)
+                new_friend = friends(friend_name=request_name, user_friends=current_user)
+                db.session.add(new_friend)
+                db.session.add(new_friend_requester)
+                db.session.commit()
+                emit("friend-request-handler", "The friend was added!")
+                action = True
+                break
+            elif request_status == "Reject":
+                    print("del")
+                    notifications.query.filter_by(notification=request_data, user_id=current_user.id).delete()
+                    db.session.commit()
+                    action = True
+                    emit("friend-request-handler", "Notification removed!")
+                    break
+    if action is False:
+        emit("friend-request-handler", "Error")
+
 
 @app.route("/validate", methods=["POST"])
 def validate_room_password():

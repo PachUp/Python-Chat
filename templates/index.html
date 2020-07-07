@@ -88,6 +88,9 @@
   </div>
 </div>
 
+{% for i in user_friends %}
+{{i}}
+{% endfor %}
 <div class="text-center">
     <div class="card purple lighten-4 chat-room">
         <div class="card-body">
@@ -347,9 +350,29 @@ toastr.options = {
         toastr["error"]("The username was not found!", "Friend request")
       }
     });
-    var $dropDownItems = $('.notification-times').children();
+    var $dropDownItems = $('.notifi-drop').children();
     $dropDownItems.on('click', function() {
+      if(this.textContent == "Reject"){
+        var index = $dropDownItems.index(this) - 1
+        var text = $dropDownItems.eq(index).text()
+        socket.emit("friend-request-handler", {"type" : "Reject", "notification" : text})
+        console.log(text)
+      }
+      else if(this.textContent == "Accept"){
+        var index = $dropDownItems.index(this) - 3
+        var text = $dropDownItems.eq(index).text()
+        console.log(text)
+        socket.emit("friend-request-handler", {"type" : "Accept", "notification" : text})
+      }
       console.log('index: ', $dropDownItems.index(this), 'text: ', this.textContent)
+    });
+    socket.on("friend-request-handler", function(msg){
+      if(msg != "Error"){
+        toastr["success"](msg, msg)
+      }
+      else{
+        toastr["error"]("There was a problem. Please try again.", msg)
+      }
     });
     function addNewlines(str) {
     var result = '';
