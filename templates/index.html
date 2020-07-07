@@ -77,7 +77,7 @@
       </div>
       <div class="modal-body mx-3">
         <div class="md-form mb-5">
-          <label data-error="wrong" data-success="right">the Friend's username</label>
+          <label data-error="wrong" data-success="right">the Friend's username (Watch for caps.)</label>
           <input class="form-control" id="friend-username-val">
         </div>
       </div>
@@ -88,17 +88,10 @@
   </div>
 </div>
 
-{% for i in user_friends %}
-{{i}}
-{% endfor %}
 <div class="text-center">
     <div class="card purple lighten-4 chat-room">
         <div class="card-body">
-      
-          <!-- Grid row -->
           <div class="row px-2">
-      
-            <!-- Grid column -->
             <div class="col-md-6 col-xl-8 pr-md-4 px-lg-auto px-0">
       
               <div class="chat-message">
@@ -132,9 +125,6 @@
               </div>
       
             </div>
-            <!-- Grid column -->
-      
-            <!-- Grid column -->
             <div class="col-md-6 col-xl-4 px-0">
       
               <h6 class="font-weight-bold mb-3 text-center text-lg-left">Friends</h6>
@@ -152,10 +142,11 @@
                       </div>
                     </a>
                   </li>
+                  {% for i in user_friends %}
                   <li class="p-2">
-                    <a href="#" class="d-flex justify-content-between">
+                    <a class="d-flex justify-content-between">
                       <div class="text-small">
-                        <strong>Second username</strong>
+                        <strong class="friend-username">{{i}}</strong>
                         <p class="last-message text-muted">Last message.</p>
                       </div>
                       <div class="chat-footer">
@@ -164,15 +155,11 @@
                       </div>
                     </a>
                   </li>
+                  {% endfor %}
                 </ul>
               </div>
-      
             </div>
-            <!-- Grid column -->
-      
           </div>
-          <!-- Grid row -->
-      
         </div>
       </div>
     
@@ -344,10 +331,10 @@ toastr.options = {
     });
     socket.on("friend-add", function(msg){
       if(msg == "Friend request sent!"){
-        toastr["success"]("The friend request sent successfully!", "Friend request")
+        toastr["success"]("The friend request sent successfully!", msg)
       }
       else{
-        toastr["error"]("The username was not found!", "Friend request")
+        toastr["error"](msg, msg)
       }
     });
     var $dropDownItems = $('.notifi-drop').children();
@@ -373,6 +360,11 @@ toastr.options = {
       else{
         toastr["error"]("There was a problem. Please try again.", msg)
       }
+    });
+    $(".friend-username").click(function(event){
+      var friend = event.text()
+      console.log(friend)
+      socket.emit("friends-dm", friend)
     });
     function addNewlines(str) {
     var result = '';

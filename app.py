@@ -3,10 +3,12 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_socketio import SocketIO, send, join_room, leave_room, emit
 from flask_login import LoginManager, UserMixin, login_user, login_required, current_user, logout_user
 from sqlalchemy import func
+import crypt
+import datetime
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'topsecret'
 socketio = SocketIO(app)
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///db4.db"
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///db5.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 login_manager = LoginManager()
@@ -153,7 +155,7 @@ def handle_message(message):
     #new_msg = AllHistory(message=message)
     #db.session.add(new_msg)
     #db.session.commit()
-    try:
+    try: # change the try and except way
         print("In room")
         room=message["room"]
         print(message["room"])
@@ -207,18 +209,36 @@ def friend_add(data):
     friend_username = data["username"]
     all_users = users.query.all()
     found = False
-    for i in all_users:
-        print(i.username)
-        if i.username == friend_username:
-            found = True
-            user = users.query.filter_by(username=friend_username).first()
-            notification_msg = current_user.username + " Has added you as a friend!"
-            notifi = notifications(notification=notification_msg, user_notification=user)
-            db.session.add(notifi)
-            db.session.commit()
-            emit("friend-add", "Friend request sent!")
+    friend_exists = False
+    for i in current_user.friends:
+        if i.friend_name == friend_username:
+            friend_exists = True
+    if current_user.username == friend_username:
+        emit("friend-add", "You can't send a friend request to yourself.")
+        found = True
+    elif friend_exists:
+        found = True
+        emit("friend-add", "You are already friends with " + friend_username)
+    else:
+        for i in all_users:
+            print(i.username)
+            if i.username == friend_username:
+                found = True
+                sent = False
+                user = users.query.filter_by(username=friend_username).first()
+                notification_msg = current_user.username + " Has added you as a friend!"
+                for j in user.notifications:
+                    if j.notification == notification_msg:
+                        sent = True
+                if not sent:
+                    notifi = notifications(notification=notification_msg, user_notification=user)
+                    db.session.add(notifi)
+                    db.session.commit()
+                    emit("friend-add", "Friend request sent!")
+                else:
+                    emit("friend-add", "You have already sent the friend request")
     if not found:
-        emit("friend-add", "error")
+        emit("friend-add", "The user does not exist.")
 
 @socketio.on('friend-request-handler')
 def friend_request_handler(data):
@@ -233,8 +253,12 @@ def friend_request_handler(data):
                 requester = users.query.filter_by(username=request_name).first()
                 new_friend_requester = friends(friend_name=current_user.username, user_friends=requester)
                 new_friend = friends(friend_name=request_name, user_friends=current_user)
+                room_hash = crypt.crypt(current_user.username + requester.username + str(datetime.datetime.now()), crypt.METHOD_MD5) # hashing MD5 with salt 
+                print(room_hash)
+                create_dm = friends_dms(first_user=current_user.username, second_user=requester.username,room=room_hash)
                 db.session.add(new_friend)
                 db.session.add(new_friend_requester)
+                db.session.add(create_dm)
                 db.session.commit()
                 emit("friend-request-handler", "The friend was added!")
                 action = True
@@ -249,6 +273,14 @@ def friend_request_handler(data):
     if action is False:
         emit("friend-request-handler", "Error")
 
+@socketio.on('friends-dm')
+def friends_dm(friend_username):
+    exist = False
+    for i in current_user.friends # first I need to check if the username even exists, the client could inspect element.
+        if i.friend == friend_username:
+            exist = True
+    if exist:
+        
 
 @app.route("/validate", methods=["POST"])
 def validate_room_password():
