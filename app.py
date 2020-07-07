@@ -3,12 +3,13 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_socketio import SocketIO, send, join_room, leave_room, emit
 from flask_login import LoginManager, UserMixin, login_user, login_required, current_user, logout_user
 from sqlalchemy import func
-import crypt
+from hashlib import md5
 import datetime
+import secrets
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'topsecret'
 socketio = SocketIO(app)
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///db5.db"
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///db8.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 login_manager = LoginManager()
@@ -200,9 +201,17 @@ def add(data):
 def on_join(data):
     #username = data['username']
     room = data['room']
+    dm = "False"
+    try:
+        dm = data["dm"]
+    except:
+        pass
     print("join " + room)
     join_room(room)
-    send(current_user.username +' has entered ' + room, room=room)
+    if dm == "True":
+        send(current_user.username +' has entered the dm', room=room)
+    else:
+        send(current_user.username +' has entered ' + room, room=room)
 
 @socketio.on('friend-add') # Todo - check if the friend request was already sent and check if it's not the same as the current user
 def friend_add(data):
@@ -253,9 +262,11 @@ def friend_request_handler(data):
                 requester = users.query.filter_by(username=request_name).first()
                 new_friend_requester = friends(friend_name=current_user.username, user_friends=requester)
                 new_friend = friends(friend_name=request_name, user_friends=current_user)
-                room_hash = crypt.crypt(current_user.username + requester.username + str(datetime.datetime.now()), crypt.METHOD_MD5) # hashing MD5 with salt 
+                hash_salt = secrets.token_hex(6) # bascily creates 6 random chars and combines them to a string
+                room_hash = md5(str(current_user.username + requester.username + str(datetime.datetime.now()) + hash_salt).encode('utf-8')).hexdigest() # hashing MD5 with salt 
                 print(room_hash)
                 create_dm = friends_dms(first_user=current_user.username, second_user=requester.username,room=room_hash)
+                notifications.query.filter_by(notification=request_data, user_id=current_user.id).delete()
                 db.session.add(new_friend)
                 db.session.add(new_friend_requester)
                 db.session.add(create_dm)
@@ -276,11 +287,21 @@ def friend_request_handler(data):
 @socketio.on('friends-dm')
 def friends_dm(friend_username):
     exist = False
-    for i in current_user.friends # first I need to check if the username even exists, the client could inspect element.
-        if i.friend == friend_username:
+    for i in current_user.friends: # first I need to check if the username even exists, the client could inspect element.
+        if i.friend_name == friend_username:
             exist = True
     if exist:
-        
+        dm_obj = friends_dms.query.filter_by(first_user=current_user.username, second_user=friend_username).first()
+        if dm_obj == None: #could be that the requester is trying to access the dm
+            dm_obj = friends_dms.query.filter_by(first_user=friend_username, second_user=current_user.username).first()
+        if dm_obj != None:
+            emit("friends-dm", dm_obj.room)
+        else:
+            emit("friends-dm", "error") # problem, shouldn't happen because I am check if the friend exist before hand.
+    else:
+        emit("friends-dm", "Friend not found")
+
+
 
 @app.route("/validate", methods=["POST"])
 def validate_room_password():

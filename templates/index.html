@@ -146,7 +146,7 @@
                   <li class="p-2">
                     <a class="d-flex justify-content-between">
                       <div class="text-small">
-                        <strong class="friend-username">{{i}}</strong>
+                        <button type="button" class="btn btn-primary friend-username">{{i}}</button>
                         <p class="last-message text-muted">Last message.</p>
                       </div>
                       <div class="chat-footer">
@@ -361,10 +361,22 @@ toastr.options = {
         toastr["error"]("There was a problem. Please try again.", msg)
       }
     });
-    $(".friend-username").click(function(event){
-      var friend = event.text()
+    $(".friend-username").click(function(){
+      var friend = $(this).text()
       console.log(friend)
       socket.emit("friends-dm", friend)
+    });
+    socket.on("friends-dm", function(data){
+      if(room == data){
+        toastr["error"]("You are already in this dm", "You are already in this dm")
+      }
+      else{
+        $("#messages").html("");
+        toastr["success"]("Going to the dm's", "dm")
+        socket.emit('leave', {"room" : room})
+        socket.emit("join", {"room" : data, "dm" : "True"})
+        room = data;
+      }
     });
     function addNewlines(str) {
     var result = '';
