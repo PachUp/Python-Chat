@@ -66,6 +66,27 @@
 </div>
 
 
+<div class="modal fade" id="modalAddFriend" tabindex="-1" role="dialog" aria-labelledby="add-friend-val-aria" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">Add a friend</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <label data-error="wrong" data-success="right">the Friend's username</label>
+          <input class="form-control" id="friend-username-val">
+        </div>
+      </div>
+      <div class="modal-footer d-flex justify-content-center">
+        <button class="btn btn-default" id="friend-btn">Enter</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div class="text-center">
     <div class="card purple lighten-4 chat-room">
@@ -232,7 +253,7 @@ toastr.options = {
       $("#input").val("")
     });
     var new_room = ""
-    var room_pass = "" // randomize
+    var room_pass = "" // randomize 
     $(".dropdown-menu").on('click', '.room', function(event){ // I have to use the .on method because .click doesn't work when data is appended
         console.log("Room clicked") 
         new_room = $(event.target).text() // check if it exists in the database
@@ -309,7 +330,27 @@ toastr.options = {
       room = created_room
       $("#modalAddRoom .close").click()
     });
-
+    $("#modalAddFriend").on('shown.bs.modal', function () {
+      $('#friend-username-val').trigger('focus');
+    });
+    $("#friend-btn").click(function(){
+      console.log("clicked")
+      var input_username = $("#friend-username-val").val()
+      console.log(input_username)
+      socket.emit("friend-add", {"username" : input_username})
+    });
+    socket.on("friend-add", function(msg){
+      if(msg == "Friend request sent!"){
+        toastr["success"]("The friend request sent successfully!", "Friend request")
+      }
+      else{
+        toastr["error"]("The username was not found!", "Friend request")
+      }
+    });
+    var $dropDownItems = $('.notification-times').children();
+    $dropDownItems.on('click', function() {
+      console.log('index: ', $dropDownItems.index(this), 'text: ', this.textContent)
+    });
     function addNewlines(str) {
     var result = '';
     while (str.length > 0) {
@@ -328,6 +369,10 @@ toastr.options = {
     }
 </script>
 <style>
+.dropdown-menu {         
+  max-height: 300px;
+  overflow-y: auto;
+}
 #messages{
   width: 100%;
   height: 690px;

@@ -18,6 +18,13 @@ class users(db.Model, UserMixin):
     username = db.Column(db.TEXT)
     password = db.Column(db.TEXT)
     email = db.Column(db.TEXT)
+    notifications = db.relationship('notifications', backref='user_notification')
+
+
+class notifications(db.Model): # maybe add a filter option (friend, server notification etc')
+    id = db.Column(db.Integer, primary_key = True)
+    notification = db.Column(db.TEXT)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id')) 
 
 class all_rooms(db.Model):
     id = db.Column(db.Integer, primary_key = True)
@@ -26,15 +33,30 @@ class all_rooms(db.Model):
     room_password = db.Column(db.TEXT)
     room_owner = db.Column(db.TEXT)
 
+class friends_dms(db.Model):
+    id = db.Column(db.Integer, primary_key = True)
+    first_user = db.Column(db.TEXT)
+    second_user = db.Column(db.TEXT)
+    room = db.Column(db.TEXT)
+    history = db.relationship('dm_history', backref='users_dms')
+
+class dm_history(db.Model):
+    id = db.Column(db.Integer, primary_key = True)
+    msg = db.Column(db.TEXT)
+    friends_dm_id = db.Column(db.Integer, db.ForeignKey('friends_dms.id')) 
+
 @app.route("/", methods=["GET"])
 @login_required
 def index():
     print("index")
     rooms = all_rooms.query.all()
+    notifi = []
+    for i in current_user.notifications:
+        notifi.append(i.notification)
     all_rooms_l = ["Main"]
     for i in rooms:
         all_rooms_l.append(i.rooms)
-    return render_template("index.html", msgs="", rooms=all_rooms_l)
+    return render_template("index.html", msgs="", rooms=all_rooms_l, notifications=notifi)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -170,6 +192,23 @@ def on_join(data):
     join_room(room)
     send(current_user.username +' has entered ' + room, room=room)
 
+@socketio.on('friend-add') # Todo - check if the friend request was already sent and check if it's not the same as the current user
+def friend_add(data):
+    friend_username = data["username"]
+    all_users = users.query.all()
+    found = False
+    for i in all_users:
+        print(i.username)
+        if i.username == friend_username:
+            found = True
+            user = users.query.filter_by(username=friend_username).first()
+            notification_msg = current_user.username + " Has added you as a friend!"
+            notifi = notifications(notification=notification_msg, user_notification=user)
+            db.session.add(notifi)
+            db.session.commit()
+            emit("friend-add", "Friend request sent!")
+    if not found:
+        emit("friend-add", "error")
 
 @app.route("/validate", methods=["POST"])
 def validate_room_password():
