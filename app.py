@@ -9,12 +9,12 @@ import secrets
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'topsecret'
 socketio = SocketIO(app)
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///db8.db"
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///db9.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
-public_rooms = ["Vanila", "Chocolate", "Main"] # need to be inside the db
+server_rooms = ["Main", "Vanila", "Chocolate"] # need to be inside the db
 
 class users(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key = True)
@@ -62,14 +62,21 @@ def index():
     rooms = all_rooms.query.all()
     notifi = []
     user_friends = []
+    public_rooms = []
+    private_rooms = []
     for i in current_user.notifications:
         notifi.append(i.notification)
     for i in current_user.friends:
         user_friends.append(i.friend_name)
-    all_rooms_l = ["Main"]
+    total_rooms = ["Main", "Vanila", "Chocolate"]
     for i in rooms:
-        all_rooms_l.append(i.rooms)
-    return render_template("index.html", msgs="", rooms=all_rooms_l, notifications=notifi, user_friends=user_friends)
+        total_rooms.append(i.rooms)
+        if i.room_password == "":
+            public_rooms.append(i.rooms)
+        else:
+            private_rooms.append(i.rooms)
+    print(server_rooms)
+    return render_template("index.html", msgs="", all_rooms=total_rooms,server_rooms= server_rooms,private_rooms=private_rooms,public_rooms=public_rooms ,notifications=notifi, user_friends=user_friends)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -174,7 +181,7 @@ def handle_message(data):
         print('received message room: ' + data["message"] + " from room " + data["room"])
         send(data["message"], room=data["room"])
 
-@socketio.on('add')
+@socketio.on('add') # Todo: need to check if the rooms has a password or not.
 def add(data):
     print("adding")
     room_name = data["name"]
@@ -213,7 +220,7 @@ def on_join(data):
     else:
         send(current_user.username +' has entered ' + room, room=room)
 
-@socketio.on('friend-add') # Todo - check if the friend request was already sent and check if it's not the same as the current user
+@socketio.on('friend-add')
 def friend_add(data):
     friend_username = data["username"]
     all_users = users.query.all()
@@ -271,7 +278,7 @@ def friend_request_handler(data):
                 db.session.add(new_friend_requester)
                 db.session.add(create_dm)
                 db.session.commit()
-                emit("friend-request-handler", "The friend was added!")
+                emit("friend-request-handler", {"msg" : "The friend was added!", "notification": request_data})
                 action = True
                 break
             elif request_status == "Reject":
@@ -279,10 +286,10 @@ def friend_request_handler(data):
                     notifications.query.filter_by(notification=request_data, user_id=current_user.id).delete()
                     db.session.commit()
                     action = True
-                    emit("friend-request-handler", "Notification removed!")
+                    emit("friend-request-handler", {"msg" : "Notification removed!", "notification": request_data})
                     break
     if action is False:
-        emit("friend-request-handler", "Error")
+        emit("friend-request-handler", {"msg" : "Error", "notification": "None"})
 
 @socketio.on('friends-dm')
 def friends_dm(friend_username):

@@ -28,7 +28,7 @@
                     <div class="nav-item dropdown this-is-navbar dropdown-nevbar">
                         <a href="#" class="nav-link dropdown-toggle this-is-navbar" data-toggle="dropdown">All Rooms</a>
                         <div class="dropdown-menu dropdown-menu-nevbar this-is-navbar" id="all-rooms">
-                            {% for i in rooms %}
+                            {% for i in all_rooms %}
                             <a class="dropdown-item this-is-navbar room" >{{i}}</a>
                             {% endfor %}
                         </div>
@@ -36,7 +36,7 @@
                     <div class="nav-item dropdown this-is-navbar dropdown-nevbar">
                         <a href="#" class="nav-link dropdown-toggle this-is-navbar" data-toggle="dropdown">Server Rooms</a>
                         <div class="dropdown-menu dropdown-menu-nevbar this-is-navbar">
-                            {% for i in rooms %}
+                            {% for i in server_rooms %}
                             <a class="dropdown-item this-is-navbar room" >{{i}}</a>
                             {% endfor %}
                         </div>
@@ -44,7 +44,7 @@
                     <div class="nav-item dropdown this-is-navbar dropdown-nevbar">
                         <a href="#" class="nav-link dropdown-toggle this-is-navbar" data-toggle="dropdown">Public Rooms</a>
                         <div class="dropdown-menu dropdown-menu-nevbar this-is-navbar">
-                            {% for i in rooms %}
+                            {% for i in public_rooms %}
                             <a class="dropdown-item this-is-navbar room" >{{i}}</a>
                             {% endfor %}
                         </div>
@@ -52,7 +52,7 @@
                     <div class="nav-item dropdown this-is-navbar dropdown-nevbar">
                         <a href="#" class="nav-link dropdown-toggle this-is-navbar" data-toggle="dropdown">Private rooms</a>
                         <div class="dropdown-menu dropdown-menu-nevbar this-is-navbar">
-                            {% for i in rooms %}
+                            {% for i in private_rooms %}
                             <a class="dropdown-item this-is-navbar room" >{{i}}</a>
                             {% endfor %}
                         </div>
@@ -64,7 +64,7 @@
                     <div class="btn-group">
                         <div id="notifi-dropd">
                             <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            Notifications <span class="badge badge-light">{{notifications|length}}</span>
+                            Notifications <span class="badge badge-light" id="notification-length">{{notifications|length}}</span>
                             </button>
                             <div class="dropdown-menu notifi-drop dropdown-menu-right">
                                 {% for i in notifications %}
@@ -72,6 +72,7 @@
                                     <button type="button" class="btn btn-outline-danger friend-rejected">Reject</button>
                                     <a>⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀</a>
                                     <button type="button" class="btn btn-outline-success friend-accepted">Accept</button>
+                                    <hr>
                                 {% endfor %}
                             </div>
                         </div>
