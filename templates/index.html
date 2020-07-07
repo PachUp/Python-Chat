@@ -14,7 +14,7 @@
     <button class="room">Vanila</button>
     <button class="room">Chocolate</button>
     -->
-    <div class="modal fade" id="modalAddRoom" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+<div class="modal fade" id="modalAddRoom" tabindex="-1" role="dialog" aria-labelledby="new-room-aria" aria-hidden="true">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header text-center">
@@ -31,7 +31,7 @@
         <div class="md-form mb-4">
           <label data-error="wrong" data-success="right">Your password</label>
           <input type="password" id="room-password" class="form-control">  
-          <input type="checkbox" class="form-check-input" id="exampleCheck1" checked>
+          <input type="checkbox" class="form-check-input" id="room-password-check" checked>
           <label class="form-check-label">With password</label>
         </div>
       </div>
@@ -41,6 +41,31 @@
     </div>
   </div>
 </div>
+
+
+<div class="modal fade" id="password-validation" tabindex="-1" role="dialog" aria-labelledby="room-password-val-aria" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">Enter the room password</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <label data-error="wrong" data-success="right">Room password</label>
+          <input class="form-control" id="room-password-val">
+        </div>
+      </div>
+      <div class="modal-footer d-flex justify-content-center">
+        <button class="btn btn-default" id="room-password-btn">Enter</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 
 <div class="text-center">
     <div class="card purple lighten-4 chat-room">
@@ -206,29 +231,77 @@ toastr.options = {
       sendMessage()
       $("#input").val("")
     });
+    var new_room = ""
+    var room_pass = "" // randomize
     $(".dropdown-menu").on('click', '.room', function(event){ // I have to use the .on method because .click doesn't work when data is appended
-        console.log("Room clicked")
-        var new_room = $(event.target).text()
+        console.log("Room clicked") 
+        new_room = $(event.target).text() // check if it exists in the database
+        event.preventDefault()
         console.log(new_room);
         if(room == new_room){
-            console.log("Exist!!!!")
             toastr["error"]("You are already in the room", "Can't join the room")
         }
         else{
-            $("#messages").html("");
-            socket.emit('leave', {"room" : room})
-            socket.emit("join", {"room" : new_room})
-            var room_msg = "You have joined " + new_room
-            toastr["success"](room_msg, "Room joined")
-            room = new_room
+          $.ajax({
+            type: "POST",
+            url: "/validate",
+            data: new_room,
+            success: function(pass){
+              room_pass = pass; // pass is the room password
+              if(pass != "False"){ 
+                  console.log("opening")
+                  $("#password-validation").modal("toggle");
+                }
+              else{
+                console.log("no password")
+                $("#messages").html("");
+                console.log("Joining a room")
+                socket.emit('leave', {"room" : room})
+                socket.emit("join", {"room" : new_room})
+                var room_msg = "You have joined " + new_room
+                toastr["success"](room_msg, "Room joined")
+                room = new_room
+              }
+            }
+          });
         }
+    });
+
+    $("#room-password-btn").click(function(){
+      console.log("Execute")
+      user_password = $("#room-password-val").val()
+      console.log(user_password)
+      console.log(room_pass)
+      if(user_password == room_pass){
+        $("#messages").html("");
+        $("#password-validation .close").click()
+        toastr["success"]("Entering you into the room!", "Corrent password")
+        console.log("Joining a room")
+        socket.emit('leave', {"room" : room})
+        socket.emit("join", {"room" : new_room})
+        room = new_room
+      }
+      else{
+        toastr["error"]("Sorry, you have entered the wrong password. Try again.", "Wrong password")
+      }
+    });
+
+    $('#password-validation').on('shown.bs.modal', function () {
+      $('#room-password-val').trigger('focus');
     });
 
     $("#new-room").click(function(){
       var created_room = $("#new-room-input").val();
       $("#new-room-input").val("");
       $("#messages").html("");
-      socket.emit('add', {"name" : created_room, "password" : "None"})
+      console.log($('#room-password-check').is(':checked'))
+      if($('#room-password-check').is(':checked')){
+        password = $("#room-password").val()
+      } 
+      else{
+        password = ""
+      }
+      socket.emit('add', {"name" : created_room, "room password" : password})
       socket.emit('leave', {"room" : room})
       socket.emit("join", {"room" : created_room})
       var room_msg = "You have joined " + created_room
@@ -243,10 +316,10 @@ toastr.options = {
         result = result + str.substring(0, 120) + '\n';
         str = str.substring(120);
     }
-    return result;
+      return result;
     }
     function htmlEntities(str) {
-    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
     function sendMessage(){
       var inp = $("#input").val();

@@ -15,7 +15,7 @@
     {% block head%}{% endblock %}
 </head>
 <body>
-    <div class="bs-example this-is-navbar" >
+    <div class="bs-example this-is-navbar">
         <nav class="navbar navbar-expand-md navbar-light bg-light this-is-navbar">
             <a class="navbar-brand this-is-navbar">Chat</a>
             <button type="button" class="navbar-toggler this-is-navbar" data-toggle="collapse" data-target="#navbarCollapse">
@@ -29,7 +29,7 @@
                         <a href="#" class="nav-link dropdown-toggle this-is-navbar" data-toggle="dropdown">Rooms</a>
                         <div class="dropdown-menu dropdown-menu-nevbar this-is-navbar">
                             {% for i in rooms %}
-                            <a class="dropdown-item this-is-navbar room">{{i}}</a>
+                            <a class="dropdown-item this-is-navbar room" >{{i}}</a>
                             {% endfor %}
                         </div>
                     </div>

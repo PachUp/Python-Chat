@@ -1,4 +1,4 @@
-from flask import Flask, render_template, url_for,request,redirect
+from flask import Flask, render_template, url_for,request,redirect, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_socketio import SocketIO, send, join_room, leave_room, emit
 from flask_login import LoginManager, UserMixin, login_user, login_required, current_user, logout_user
@@ -6,7 +6,7 @@ from sqlalchemy import func
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'topsecret'
 socketio = SocketIO(app)
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///db3.db"
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///db4.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 login_manager = LoginManager()
@@ -153,7 +153,8 @@ def add(data):
     if room_exist is False:
         print("adding a room")
         owner = current_user.username
-        room_password = data["password"] # None for now
+        room_password = data["room password"] # None for now
+        print(room_password)
         add_new_room = all_rooms(rooms= room_name, room_password= room_password, room_owner= owner)
         db.session.add(add_new_room)
         db.session.commit()
@@ -168,6 +169,27 @@ def on_join(data):
     print("join " + room)
     join_room(room)
     send(current_user.username +' has entered ' + room, room=room)
+
+
+@app.route("/validate", methods=["POST"])
+def validate_room_password():
+    print(request.get_data())
+    room = request.get_data().decode()
+    print(room)
+    print("val " + room)
+    if room != "Main":
+        room_list = all_rooms.query.all()
+        password = ""
+        for i in room_list:
+            if i.rooms == room:
+                password = i.room_password
+        print(password)
+        if password != "":
+            return password
+        else:
+            return "False"
+    else:
+        return "False"
 
 @socketio.on('leave')
 def on_leave(data):
