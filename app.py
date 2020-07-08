@@ -9,7 +9,7 @@ import secrets
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'topsecret'
 socketio = SocketIO(app)
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///db10.db"
+app.config["SQLALCHEMY_DATABASE_URI"] = "postgres://vzhrgnqdyaziyw:6bdbaf5bcd402e3921a8c3692924fafb5afc00f3ad065cca78894629c611f411@ec2-54-75-246-118.eu-west-1.compute.amazonaws.com:5432/d9lulko2sfvhhu"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 login_manager = LoginManager()

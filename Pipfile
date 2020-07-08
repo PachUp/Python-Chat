@@ -11,6 +11,7 @@ flask-sqlalchemy = "*"
 flask-socketio = "*"
 flask-login = "*"
 sqlalchemy = "*"
+gunicorn = "*"
 
 [requires]
 python_version = "3.8"
