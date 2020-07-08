@@ -9,7 +9,7 @@ import secrets
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'topsecret'
 socketio = SocketIO(app)
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///db9.db"
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///db10.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 login_manager = LoginManager()
@@ -53,6 +53,7 @@ class friends_dms(db.Model):
 class dm_history(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     msg = db.Column(db.TEXT)
+    msg_from_user = db.Column(db.TEXT)
     friends_dm_id = db.Column(db.Integer, db.ForeignKey('friends_dms.id')) 
 
 @app.route("/", methods=["GET"])
@@ -163,13 +164,19 @@ def handle_message(message):
     #new_msg = AllHistory(message=message)
     #db.session.add(new_msg)
     #db.session.commit()
-    try: # change the try and except way
+    try:
         print("In room")
         room=message["room"]
         print(message["room"])
+        friend_obj = friends_dms.query.filter_by(room=room).first()
+        print(friend_obj) # should be none if it doesn't find it
+        if friend_obj != None:
+           new_dm = dm_history(msg=message["message"], msg_from_user=current_user.username, users_dms=friend_obj)
+           db.session.add(new_dm)
+           db.session.commit()
         send({"msg" : message["message"], "user" : current_user.username}, room=room)
     except:
-        print(type(message))
+        print(type(message)) # server message
         if message == "Connected!":
             send(current_user.username +" Has " + message)
 
@@ -197,10 +204,17 @@ def add(data):
         owner = current_user.username
         room_password = data["room password"] # None for now
         print(room_password)
-        add_new_room = all_rooms(rooms= room_name, room_password= room_password, room_owner= owner)
-        db.session.add(add_new_room)
-        db.session.commit()
-        emit("add", room_name) # send if the room is private or not
+        password_is_dm = False
+        for i in friends_dms.query.all():
+            if room_password == i.room:
+                password_is_dm = True
+        if not password_is_dm:
+            add_new_room = all_rooms(rooms= room_name, room_password=room_password, room_owner= owner)
+            db.session.add(add_new_room)
+            db.session.commit()
+            emit("add", room_name) # send if the room is private or not
+        else:
+            emit("add", "an unexpected error has occurred, please choose a different password") # send if the room is private or not
     else:
         emit("add", "Room already exists")
 
@@ -330,12 +344,38 @@ def validate_room_password():
     else:
         return "False"
 
+@socketio.on("dm-history")
+def show_dm_history(friend_name):
+    dm_obj =  friends_dms.query.filter_by(first_user = current_user.username, second_user=friend_name).first()
+    if dm_obj is None:
+        dm_obj =  friends_dms.query.filter_by(first_user = friend_name, second_user=current_user.username).first()
+    if dm_obj is None:
+        emit("dm-history", "the dm was not found in the db")
+    else:
+        chat_history = {}
+        sent_user = []
+        user_msg = []
+        for i in dm_obj.history:
+            user_msg.append(i.msg) 
+            sent_user.append(i.msg_from_user)
+        chat_history["user"] = sent_user
+        chat_history["msg"] = user_msg
+        emit("dm-history", chat_history)
+
 @socketio.on('leave')
 def on_leave(data):
     #username = data['username']
+    dm = "False"
+    try:
+        dm = data["dm"]
+    except:
+        pass
     room = data['room']
     leave_room(room)
-    print("leave " + room)
+    if dm == "True":
+        send(current_user.username +' has left the dm', room=room)
+    else:
+        send(current_user.username + ' has left ' + room, room=room)
     send('has left has entered ' + room, room=room)
 
 

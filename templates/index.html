@@ -180,7 +180,7 @@ toastr.options = {
   "showMethod": "fadeIn",
   "hideMethod": "fadeOut"
 }
-    room = "Main"
+    var room = "Main"
     var socket = io("http://127.0.0.1:5000");
     socket.on('connect', function() {
         socket.send("Connected!")
@@ -221,6 +221,9 @@ toastr.options = {
     });
     socket.on("add", function(msg){
       console.log("add")
+      if(msg == "an unexpected error has occurred, please choose a different password"){
+        toastr["error"](msg, "error")
+      }
       if(msg != "Room already exists"){ // Todo check if the room has a password first before appending it to all of the dropdowns
         $(".dropdown-menu").append('<a class="dropdown-item this-is-navbar room">' + msg + '</a>')
         toastr["success"]("Your room has successfully created", "Room created")
@@ -371,10 +374,10 @@ toastr.options = {
             <a class="d-flex justify-content-between">
               <div class="text-small">
                 <button type="button" class="btn btn-primary friend-username">` + data["name"] + `</button>
-                <p class="last-message text-muted"></p>
+                <p class="last-message text-muted">Last message.</p>
               </div>
               <div class="chat-footer">
-                <p class="text-smaller text-muted mb-0"></p>
+                <p class="text-smaller text-muted mb-0">sent x min ago</p>
                 <span class="text-muted float-right"><i class="fas fa-mail-reply" aria-hidden="true"></i></span>
               </div>
             </a>
@@ -392,6 +395,32 @@ toastr.options = {
       var friend = $(this).text()
       console.log(friend)
       socket.emit("friends-dm", friend)
+      socket.emit("dm-history", friend)
+      socket.on("dm-history", function(data){
+        if(data == "the dm was not found in the db"){
+        toastr["error"](data,data)
+        }
+        else{
+          sent_user = data["user"] // array
+          user_msg = data["msg"] // array same length
+          for(var i = 0; i<user_msg.length; i++){
+            $("#messages").append(`
+            <li class="d-flex justify-content-between mb-4">
+              <div class="chat-body white p-3 ml-2 z-depth-1">
+                <div class="header">
+                  <strong class="primary-font">` + sent_user[i] +`</strong>
+                  <small class="pull-right text-muted"><i class="far fa-clock"></i>min ago</small>
+                </div>
+                  <hr class="w-100">
+                  <p>`
+                    + user_msg[i] +
+                  `</p>
+              </div>
+            </li>
+            `)
+          }
+        }
+      });
     });
     socket.on("friends-dm", function(data){
       if(room == data){
@@ -400,7 +429,7 @@ toastr.options = {
       else{
         $("#messages").html("");
         toastr["success"]("Going to the dm's", "dm")
-        socket.emit('leave', {"room" : room})
+        socket.emit('leave', {"room" : room, "dm" : "True"})
         socket.emit("join", {"room" : data, "dm" : "True"})
         room = data;
       }
