@@ -200,7 +200,7 @@ def add(data):
         add_new_room = all_rooms(rooms= room_name, room_password= room_password, room_owner= owner)
         db.session.add(add_new_room)
         db.session.commit()
-        emit("add", room_name)
+        emit("add", room_name) # send if the room is private or not
     else:
         emit("add", "Room already exists")
 
@@ -278,7 +278,7 @@ def friend_request_handler(data):
                 db.session.add(new_friend_requester)
                 db.session.add(create_dm)
                 db.session.commit()
-                emit("friend-request-handler", {"msg" : "The friend was added!", "notification": request_data})
+                emit("friend-request-handler", {"msg" : "The friend was added!", "notification": request_data, "type" : request_status, "name" : request_name})
                 action = True
                 break
             elif request_status == "Reject":
