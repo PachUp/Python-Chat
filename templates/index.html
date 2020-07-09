@@ -2,6 +2,7 @@
 {% block head%}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css">
+<script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
 {% endblock %}
 {% block body%}
@@ -181,7 +182,7 @@ toastr.options = {
   "hideMethod": "fadeOut"
 }
     var room = "Main"
-    console.log("http://" + document.domain + ":" + location.port)
+    console.log("http://" + document.domain + ":" + location.port, {transports: ['websocket']})
     var socket = io("http://" + document.domain + ":" + location.port);
     socket.on('connect', function() {
         socket.send("Connected!")
