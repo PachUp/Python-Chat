@@ -15,6 +15,7 @@ gunicorn = "*"
 psycopg2 = "*"
 gevent-websocket = "*"
 greenlet = "*"
+gevent = "==1.4.0"
 
 [requires]
 python_version = "3.8"
