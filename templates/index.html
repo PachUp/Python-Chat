@@ -434,9 +434,7 @@ toastr.options = {
           socket.emit("join", {"room" : data, "dm" : "True"})
           room = data;
         }
-      });
-      
-  });
+      }); 
     function addNewlines(str) {
     var result = '';
     while (str.length > 0) {
@@ -453,6 +451,7 @@ toastr.options = {
       inp = htmlEntities(inp);
       socket.send({"message" : inp, "room" : room})
     }
+  });
 </script>
 <style>
 .dropdown-menu {         
