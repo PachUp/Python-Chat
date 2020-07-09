@@ -181,259 +181,262 @@ toastr.options = {
   "hideMethod": "fadeOut"
 }
     var room = "Main"
-    var socket = io("http://chat-py.herokuapp.com:" + location.port);
-    socket.on('connect', function() {
-        socket.send("Connected!")
-    });
-    socket.on("message", function(obj){ // add connected handler
-        console.log(obj)
-        try{
-          console.log(typeof(obj))
-          msg = addNewlines(obj["msg"])
-          username = obj["user"]
-        }
-        catch(err){
-          console.log(typeof(obj))
-          msg = addNewlines(obj)
-          username = "Server"
-        }
-        console.log("recived")
-        console.log(msg)
-        console.log(username)
-        var entites = "";
-        $(entites).html(msg)
-        console.log(entites)
-        var create_msg = `<li class="d-flex justify-content-between mb-4">
-                        <div class="chat-body white p-3 ml-2 z-depth-1">
-                            <div class="header">
-                                <strong class="primary-font">`+ username +`</strong>
-                                <small class="pull-right text-muted"><i class="far fa-clock"></i>min ago</small>
-                            </div>
-                            <hr class="w-100">
-                            <p id="new-msg">` + 
-                                msg
-                                +
-                                `
-                            </p>
-                        </div>
-                    </li>`
-        $("#messages").append(create_msg)
-    });
-    socket.on("add", function(msg){
-      console.log("add")
-      if(msg == "an unexpected error has occurred, please choose a different password"){
-        toastr["error"](msg, "error")
-      }
-      if(msg != "Room already exists"){ // Todo check if the room has a password first before appending it to all of the dropdowns
-        $(".dropdown-menu").append('<a class="dropdown-item this-is-navbar room">' + msg + '</a>')
-        toastr["success"]("Your room has successfully created", "Room created")
-      }
-      else{
-        toastr["error"]("it seems like the room already exists", "Can't create the room")
-      }
-    });
     $(document).ready(function(){
-      socket.emit("join", {"room" : room})
-    });
-    $("#input").keydown(function(e){
-      if(e.keyCode == 13){ // 13 is the enter key
-        sendMessage()
-        $("#input").val("")
-      }
-    });
-    $("#send").click(function(){
-      sendMessage()
-      $("#input").val("")
-    });
-    var new_room = ""
-    var room_pass = "" // randomize 
-    $(".dropdown-menu").on('click', '.room', function(event){ // I have to use the .on method because .click doesn't work when data is appended
-        console.log("Room clicked") 
-        new_room = $(event.target).text() // check if it exists in the database
-        event.preventDefault()
-        console.log(new_room);
-        if(room == new_room){
-            toastr["error"]("You are already in the room", "Can't join the room")
-        }
-        else{
-          $.ajax({
-            type: "POST",
-            url: "/validate",
-            data: new_room,
-            success: function(pass){
-              room_pass = pass; // pass is the room password
-              if(pass != "False"){ 
-                  console.log("opening")
-                  $("#password-validation").modal("toggle");
-                }
-              else{
-                console.log("no password")
-                $("#messages").html("");
-                console.log("Joining a room")
-                socket.emit('leave', {"room" : room})
-                socket.emit("join", {"room" : new_room})
-                var room_msg = "You have joined " + new_room
-                toastr["success"](room_msg, "Room joined")
-                room = new_room
-              }
-            }
-          });
-        }
-    });
-
-    $("#room-password-btn").click(function(){
-      console.log("Execute")
-      user_password = $("#room-password-val").val()
-      console.log(user_password)
-      console.log(room_pass)
-      if(user_password == room_pass){
-        $("#messages").html("");
-        $("#password-validation .close").click()
-        toastr["success"]("Entering you into the room!", "Corrent password")
-        console.log("Joining a room")
-        socket.emit('leave', {"room" : room})
-        socket.emit("join", {"room" : new_room})
-        room = new_room
-      }
-      else{
-        toastr["error"]("Sorry, you have entered the wrong password. Try again.", "Wrong password")
-      }
-    });
-
-    $('#password-validation').on('shown.bs.modal', function () {
-      $('#room-password-val').trigger('focus');
-    });
-
-    $("#new-room").click(function(){
-      var created_room = $("#new-room-input").val();
-      $("#new-room-input").val("");
-      $("#messages").html("");
-      console.log($('#room-password-check').is(':checked'))
-      if($('#room-password-check').is(':checked')){
-        password = $("#room-password").val()
-      } 
-      else{
-        password = ""
-      }
-      socket.emit('add', {"name" : created_room, "room password" : password})
-      socket.emit('leave', {"room" : room})
-      socket.emit("join", {"room" : created_room})
-      var room_msg = "You have joined " + created_room
-      toastr["success"](room_msg, "Room joined")
-      room = created_room
-      $("#modalAddRoom .close").click()
-    });
-    $("#modalAddFriend").on('shown.bs.modal', function () {
-      $('#friend-username-val').trigger('focus');
-    });
-    $("#friend-btn").click(function(){
-      console.log("clicked")
-      var input_username = $("#friend-username-val").val()
-      console.log(input_username)
-      socket.emit("friend-add", {"username" : input_username})
-    });
-    socket.on("friend-add", function(msg){
-      if(msg == "Friend request sent!"){
-        toastr["success"]("The friend request sent successfully!", msg)
-      }
-      else{
-        toastr["error"](msg, msg)
-      }
-    });
-    var $dropDownItems = $('.notifi-drop').children();
-    $dropDownItems.on('click', function() {
-      if(this.textContent == "Reject"){
-        var index = $dropDownItems.index(this) - 1
-        var text = $dropDownItems.eq(index).text()
-        socket.emit("friend-request-handler", {"type" : "Reject", "notification" : text})
-        console.log(text)
-      }
-      else if(this.textContent == "Accept"){
-        var index = $dropDownItems.index(this) - 3
-        var text = $dropDownItems.eq(index).text()
-        console.log(text)
-        socket.emit("friend-request-handler", {"type" : "Accept", "notification" : text})
-      }
-      console.log('index: ', $dropDownItems.index(this), 'text: ', this.textContent)
-    });
-    socket.on("friend-request-handler", function(data){
-      msg = data["msg"]
-      if(msg != "Error"){
-        notification = data["notification"]
-        console.log(notification)
-        var text_index = $(".dropdown-item:contains(" + notification + ")").eq(0).index()
-        console.log(text_index)
-        for(var i =text_index; i>=text_index - 3; i--){
-          $(".notifi-drop").children().eq(i).remove()
-        } 
-        var notifi_length = $("#notification-length").text()
-        $("#notification-length").text(notifi_length - 1)
-        if(data["type"] == "Accept"){ // could be if it's undefined I guess
-          var create_msg = `
-          <li class="p-2">
-            <a class="d-flex justify-content-between">
-              <div class="text-small">
-                <button type="button" class="btn btn-primary friend-username">` + data["name"] + `</button>
-                <p class="last-message text-muted">Last message.</p>
-              </div>
-              <div class="chat-footer">
-                <p class="text-smaller text-muted mb-0">sent x min ago</p>
-                <span class="text-muted float-right"><i class="fas fa-mail-reply" aria-hidden="true"></i></span>
-              </div>
-            </a>
-          </li>
-          `
-          $(".friend-list").append(create_msg)
-        }
-        toastr["success"](msg, msg)
-      }
-      else{
-        toastr["error"]("There was a problem. Please try again.", msg)
-      }
-    });
-    $(".friend-div").on('click', '.friend-username' , function(){
-      var friend = $(this).text()
-      console.log(friend)
-      socket.emit("friends-dm", friend)
-      socket.emit("dm-history", friend)
-      socket.on("dm-history", function(data){
-        if(data == "the dm was not found in the db"){
-        toastr["error"](data,data)
-        }
-        else{
-          sent_user = data["user"] // array
-          user_msg = data["msg"] // array same length
-          for(var i = 0; i<user_msg.length; i++){
-            $("#messages").append(`
-            <li class="d-flex justify-content-between mb-4">
-              <div class="chat-body white p-3 ml-2 z-depth-1">
-                <div class="header">
-                  <strong class="primary-font">` + sent_user[i] +`</strong>
-                  <small class="pull-right text-muted"><i class="far fa-clock"></i>min ago</small>
-                </div>
-                  <hr class="w-100">
-                  <p>`
-                    + user_msg[i] +
-                  `</p>
-              </div>
-            </li>
-            `)
+      var socket = io("http://chat-py.herokuapp.com:" + location.port);
+      socket.on('connect', function() {
+          socket.send("Connected!")
+      });
+      socket.on("message", function(obj){ // add connected handler
+          console.log(obj)
+          try{
+            console.log(typeof(obj))
+            msg = addNewlines(obj["msg"])
+            username = obj["user"]
           }
+          catch(err){
+            console.log(typeof(obj))
+            msg = addNewlines(obj)
+            username = "Server"
+          }
+          console.log("recived")
+          console.log(msg)
+          console.log(username)
+          var entites = "";
+          $(entites).html(msg)
+          console.log(entites)
+          var create_msg = `<li class="d-flex justify-content-between mb-4">
+                          <div class="chat-body white p-3 ml-2 z-depth-1">
+                              <div class="header">
+                                  <strong class="primary-font">`+ username +`</strong>
+                                  <small class="pull-right text-muted"><i class="far fa-clock"></i>min ago</small>
+                              </div>
+                              <hr class="w-100">
+                              <p id="new-msg">` + 
+                                  msg
+                                  +
+                                  `
+                              </p>
+                          </div>
+                      </li>`
+          $("#messages").append(create_msg)
+      });
+      socket.on("add", function(msg){
+        console.log("add")
+        if(msg == "an unexpected error has occurred, please choose a different password"){
+          toastr["error"](msg, "error")
+        }
+        if(msg != "Room already exists"){ // Todo check if the room has a password first before appending it to all of the dropdowns
+          $(".dropdown-menu").append('<a class="dropdown-item this-is-navbar room">' + msg + '</a>')
+          toastr["success"]("Your room has successfully created", "Room created")
+        }
+        else{
+          toastr["error"]("it seems like the room already exists", "Can't create the room")
         }
       });
-    });
-    socket.on("friends-dm", function(data){
-      if(room == data){
-        toastr["error"]("You are already in this dm", "You are already in this dm")
-      }
-      else{
+      $(document).ready(function(){
+        socket.emit("join", {"room" : room})
+      });
+      $("#input").keydown(function(e){
+        if(e.keyCode == 13){ // 13 is the enter key
+          sendMessage()
+          $("#input").val("")
+        }
+      });
+      $("#send").click(function(){
+        sendMessage()
+        $("#input").val("")
+      });
+      var new_room = ""
+      var room_pass = "" // randomize 
+      $(".dropdown-menu").on('click', '.room', function(event){ // I have to use the .on method because .click doesn't work when data is appended
+          console.log("Room clicked") 
+          new_room = $(event.target).text() // check if it exists in the database
+          event.preventDefault()
+          console.log(new_room);
+          if(room == new_room){
+              toastr["error"]("You are already in the room", "Can't join the room")
+          }
+          else{
+            $.ajax({
+              type: "POST",
+              url: "/validate",
+              data: new_room,
+              success: function(pass){
+                room_pass = pass; // pass is the room password
+                if(pass != "False"){ 
+                    console.log("opening")
+                    $("#password-validation").modal("toggle");
+                  }
+                else{
+                  console.log("no password")
+                  $("#messages").html("");
+                  console.log("Joining a room")
+                  socket.emit('leave', {"room" : room})
+                  socket.emit("join", {"room" : new_room})
+                  var room_msg = "You have joined " + new_room
+                  toastr["success"](room_msg, "Room joined")
+                  room = new_room
+                }
+              }
+            });
+          }
+      });
+
+      $("#room-password-btn").click(function(){
+        console.log("Execute")
+        user_password = $("#room-password-val").val()
+        console.log(user_password)
+        console.log(room_pass)
+        if(user_password == room_pass){
+          $("#messages").html("");
+          $("#password-validation .close").click()
+          toastr["success"]("Entering you into the room!", "Corrent password")
+          console.log("Joining a room")
+          socket.emit('leave', {"room" : room})
+          socket.emit("join", {"room" : new_room})
+          room = new_room
+        }
+        else{
+          toastr["error"]("Sorry, you have entered the wrong password. Try again.", "Wrong password")
+        }
+      });
+
+      $('#password-validation').on('shown.bs.modal', function () {
+        $('#room-password-val').trigger('focus');
+      });
+
+      $("#new-room").click(function(){
+        var created_room = $("#new-room-input").val();
+        $("#new-room-input").val("");
         $("#messages").html("");
-        toastr["success"]("Going to the dm's", "dm")
-        socket.emit('leave', {"room" : room, "dm" : "True"})
-        socket.emit("join", {"room" : data, "dm" : "True"})
-        room = data;
-      }
-    });
+        console.log($('#room-password-check').is(':checked'))
+        if($('#room-password-check').is(':checked')){
+          password = $("#room-password").val()
+        } 
+        else{
+          password = ""
+        }
+        socket.emit('add', {"name" : created_room, "room password" : password})
+        socket.emit('leave', {"room" : room})
+        socket.emit("join", {"room" : created_room})
+        var room_msg = "You have joined " + created_room
+        toastr["success"](room_msg, "Room joined")
+        room = created_room
+        $("#modalAddRoom .close").click()
+      });
+      $("#modalAddFriend").on('shown.bs.modal', function () {
+        $('#friend-username-val').trigger('focus');
+      });
+      $("#friend-btn").click(function(){
+        console.log("clicked")
+        var input_username = $("#friend-username-val").val()
+        console.log(input_username)
+        socket.emit("friend-add", {"username" : input_username})
+      });
+      socket.on("friend-add", function(msg){
+        if(msg == "Friend request sent!"){
+          toastr["success"]("The friend request sent successfully!", msg)
+        }
+        else{
+          toastr["error"](msg, msg)
+        }
+      });
+      var $dropDownItems = $('.notifi-drop').children();
+      $dropDownItems.on('click', function() {
+        if(this.textContent == "Reject"){
+          var index = $dropDownItems.index(this) - 1
+          var text = $dropDownItems.eq(index).text()
+          socket.emit("friend-request-handler", {"type" : "Reject", "notification" : text})
+          console.log(text)
+        }
+        else if(this.textContent == "Accept"){
+          var index = $dropDownItems.index(this) - 3
+          var text = $dropDownItems.eq(index).text()
+          console.log(text)
+          socket.emit("friend-request-handler", {"type" : "Accept", "notification" : text})
+        }
+        console.log('index: ', $dropDownItems.index(this), 'text: ', this.textContent)
+      });
+      socket.on("friend-request-handler", function(data){
+        msg = data["msg"]
+        if(msg != "Error"){
+          notification = data["notification"]
+          console.log(notification)
+          var text_index = $(".dropdown-item:contains(" + notification + ")").eq(0).index()
+          console.log(text_index)
+          for(var i =text_index; i>=text_index - 3; i--){
+            $(".notifi-drop").children().eq(i).remove()
+          } 
+          var notifi_length = $("#notification-length").text()
+          $("#notification-length").text(notifi_length - 1)
+          if(data["type"] == "Accept"){ // could be if it's undefined I guess
+            var create_msg = `
+            <li class="p-2">
+              <a class="d-flex justify-content-between">
+                <div class="text-small">
+                  <button type="button" class="btn btn-primary friend-username">` + data["name"] + `</button>
+                  <p class="last-message text-muted">Last message.</p>
+                </div>
+                <div class="chat-footer">
+                  <p class="text-smaller text-muted mb-0">sent x min ago</p>
+                  <span class="text-muted float-right"><i class="fas fa-mail-reply" aria-hidden="true"></i></span>
+                </div>
+              </a>
+            </li>
+            `
+            $(".friend-list").append(create_msg)
+          }
+          toastr["success"](msg, msg)
+        }
+        else{
+          toastr["error"]("There was a problem. Please try again.", msg)
+        }
+      });
+      $(".friend-div").on('click', '.friend-username' , function(){
+        var friend = $(this).text()
+        console.log(friend)
+        socket.emit("friends-dm", friend)
+        socket.emit("dm-history", friend)
+        socket.on("dm-history", function(data){
+          if(data == "the dm was not found in the db"){
+          toastr["error"](data,data)
+          }
+          else{
+            sent_user = data["user"] // array
+            user_msg = data["msg"] // array same length
+            for(var i = 0; i<user_msg.length; i++){
+              $("#messages").append(`
+              <li class="d-flex justify-content-between mb-4">
+                <div class="chat-body white p-3 ml-2 z-depth-1">
+                  <div class="header">
+                    <strong class="primary-font">` + sent_user[i] +`</strong>
+                    <small class="pull-right text-muted"><i class="far fa-clock"></i>min ago</small>
+                  </div>
+                    <hr class="w-100">
+                    <p>`
+                      + user_msg[i] +
+                    `</p>
+                </div>
+              </li>
+              `)
+            }
+          }
+        });
+      });
+      socket.on("friends-dm", function(data){
+        if(room == data){
+          toastr["error"]("You are already in this dm", "You are already in this dm")
+        }
+        else{
+          $("#messages").html("");
+          toastr["success"]("Going to the dm's", "dm")
+          socket.emit('leave', {"room" : room, "dm" : "True"})
+          socket.emit("join", {"room" : data, "dm" : "True"})
+          room = data;
+        }
+      });
+      
+  });
     function addNewlines(str) {
     var result = '';
     while (str.length > 0) {
