@@ -14,7 +14,7 @@ sqlalchemy = "*"
 psycopg2 = "*"
 gevent-websocket = "*"
 gunicorn = "*"
-gevent = "*"
+eventlet = "*"
 
 [requires]
 python_version = "3.8"
