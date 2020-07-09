@@ -376,7 +376,6 @@ def on_leave(data):
         send(current_user.username +' has left the dm', room=room)
     else:
         send(current_user.username + ' has left ' + room, room=room)
-    send('has left has entered ' + room, room=room)
 
 
 if __name__ == "__main__":
