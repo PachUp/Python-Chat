@@ -13,7 +13,6 @@ flask-login = "*"
 sqlalchemy = "*"
 gunicorn = "*"
 psycopg2 = "*"
-eventlet = "*"
 gevent-websocket = "*"
 
 [requires]
