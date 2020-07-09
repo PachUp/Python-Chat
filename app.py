@@ -380,5 +380,4 @@ def on_leave(data):
 
 
 if __name__ == "__main__":
-    # socketio.run(app, debug=True) no longer needed in heroku...
-    app.run()
+    socketio.run(app, debug=True)
