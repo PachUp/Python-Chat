@@ -181,7 +181,7 @@ toastr.options = {
   "hideMethod": "fadeOut"
 }
     var room = "Main"
-    var socket = io("http://chat-py.herokuapp.com");
+    var socket = io("http://chat-py.herokuapp.com:" + location.port);
     socket.on('connect', function() {
         socket.send("Connected!")
     });
