@@ -13,8 +13,8 @@ flask-login = "*"
 sqlalchemy = "*"
 psycopg2 = "*"
 gevent-websocket = "*"
-gevent = "==1.4.0"
-greenlet = "==0.4.15"
+gunicorn = "*"
+gevent = "*"
 
 [requires]
 python_version = "3.8"
