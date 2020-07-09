@@ -9,7 +9,7 @@ import secrets
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'topsecret'
 socketio = SocketIO(app,cors_allowed_origins=['http://chat-py.herokuapp.com', 'http://127.0.0.1:5000'])
-app.config["SQLALCHEMY_DATABASE_URI"] = "postgres://vzhrgnqdyaziyw:6bdbaf5bcd402e3921a8c3692924fafb5afc00f3ad065cca78894629c611f411@ec2-54-75-246-118.eu-west-1.compute.amazonaws.com:5432/d9lulko2sfvhhu"
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///s.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 login_manager = LoginManager()
@@ -56,6 +56,8 @@ class dm_history(db.Model):
     msg_from_user = db.Column(db.TEXT)
     friends_dm_id = db.Column(db.Integer, db.ForeignKey('friends_dms.id')) 
 
+
+
 @app.route("/", methods=["GET"])
 @login_required
 def index():
@@ -63,10 +65,21 @@ def index():
     rooms = all_rooms.query.all()
     notifi = []
     user_friends = []
+    last_message = []
     public_rooms = []
     private_rooms = []
     for i in current_user.notifications:
         notifi.append(i.notification)
+    friends_obj_o_1 = friends_dms.query.filter_by(first_user=current_user.username).first()
+    friends_obj_o_2 = friends_dms.query.filter_by(second_user=current_user.username).first()
+    if friends_obj_o_1 is not None:
+        for i in range(len(friends_obj_o_1.history)):
+            if(i == len(friends_obj_o_1.history) - 1):  
+                last_message.append(friends_obj_o_1.history[i])
+    if friends_obj_o_2 is not None:
+        for i in range(len(friends_obj_o_2.history)):
+            if(i == len(friends_obj_o_2.history) - 1):  
+                last_message.append(friends_obj_o_2.history[i])
     for i in current_user.friends:
         user_friends.append(i.friend_name)
     total_rooms = ["Main", "Vanila", "Chocolate"]
@@ -77,7 +90,7 @@ def index():
         else:
             private_rooms.append(i.rooms)
     print(server_rooms)
-    return render_template("index.html", msgs="", all_rooms=total_rooms,server_rooms= server_rooms,private_rooms=private_rooms,public_rooms=public_rooms ,notifications=notifi, user_friends=user_friends)
+    return render_template("index.html", msgs="", all_rooms=total_rooms,server_rooms= server_rooms,private_rooms=private_rooms,public_rooms=public_rooms ,notifications=notifi, user_friends=user_friends, last_message=last_message, username = current_user.username)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -360,7 +373,36 @@ def show_dm_history(friend_name):
             sent_user.append(i.msg_from_user)
         chat_history["user"] = sent_user
         chat_history["msg"] = user_msg
+        chat_history["room"] = dm_obj.room
+        chat_history["friend"] = friend_name
         emit("dm-history", chat_history)
+
+@socketio.on('get-dm-data')
+def get_dm_data(room):
+    dm_obj = friends_dms.query.filter_by(room=room).first()
+    print("sdi")
+    print(request.sid)
+    if dm_obj is not None:
+        now = datetime.datetime.now()
+        date = now.strftime("%d/%m/%Y %H:%M:%S")
+        first_user = dm_obj.first_user
+        second_user = dm_obj.second_user
+        friend = ""
+        first = False
+        if first_user != current_user.username:
+            friend = first_user
+            first = True
+        elif second_user != current_user.username:
+            friend = second_user
+        else:
+            friend = "Error"
+        print(friend)
+        you = ""
+        if first:
+            you = second_user
+        else:
+            you = first_user
+        emit("get-dm-data", {"date" : date, "friend" : friend, "you" : you}, broadcast=True)
 
 @socketio.on('leave')
 def on_leave(data):
