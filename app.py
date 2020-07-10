@@ -9,7 +9,7 @@ import secrets
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'topsecret'
 socketio = SocketIO(app,cors_allowed_origins=['http://chat-py.herokuapp.com', 'http://127.0.0.1:5000'])
-app.config["SQLALCHEMY_DATABASE_URI"] = "postgres://wmiprlaxkkcucm:e9df79a669615a7dccb0e650fd71554af72912c877fa7dddfc73690ccd61a7e2@ec2-54-247-78-30.eu-west-1.compute.amazonaws.com:5432/d5jhqg14qdt1sd"
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///somed1.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 login_manager = LoginManager()
@@ -34,6 +34,7 @@ class notifications(db.Model): # maybe add a filter option (friend, server notif
 class friends(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     friend_name = db.Column(db.TEXT)
+    last_message_time = db.Column(db.TEXT, default=datetime.datetime.now().strftime("%H:%M %d/%m/%Y")) # I am not using datetime because I need to return a string of the time anyway
     user_id = db.Column(db.Integer, db.ForeignKey('users.id')) 
 
 class all_rooms(db.Model):
@@ -54,7 +55,9 @@ class dm_history(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     msg = db.Column(db.TEXT)
     msg_from_user = db.Column(db.TEXT)
+    msg_time = db.Column(db.TEXT)
     friends_dm_id = db.Column(db.Integer, db.ForeignKey('friends_dms.id')) 
+
 
 
 
@@ -65,6 +68,7 @@ def index():
     rooms = all_rooms.query.all()
     notifi = []
     user_friends = []
+    last_message_time_with_friends = []
     last_message = []
     public_rooms = []
     private_rooms = []
@@ -72,6 +76,7 @@ def index():
         notifi.append(i.notification)
     friends_obj_o_1 = friends_dms.query.filter_by(first_user=current_user.username).first()
     friends_obj_o_2 = friends_dms.query.filter_by(second_user=current_user.username).first()
+    """
     if friends_obj_o_1 is not None:
         for i in range(len(friends_obj_o_1.history)):
             if(i == len(friends_obj_o_1.history) - 1):  
@@ -80,8 +85,10 @@ def index():
         for i in range(len(friends_obj_o_2.history)):
             if(i == len(friends_obj_o_2.history) - 1):  
                 last_message.append(friends_obj_o_2.history[i])
+    """
     for i in current_user.friends:
         user_friends.append(i.friend_name)
+        last_message_time_with_friends.append(i.last_message_time)
     total_rooms = ["Main", "Vanila", "Chocolate"]
     for i in rooms:
         total_rooms.append(i.rooms)
@@ -90,7 +97,7 @@ def index():
         else:
             private_rooms.append(i.rooms)
     print(server_rooms)
-    return render_template("index.html", msgs="", all_rooms=total_rooms,server_rooms= server_rooms,private_rooms=private_rooms,public_rooms=public_rooms ,notifications=notifi, user_friends=user_friends, last_message=last_message, username = current_user.username)
+    return render_template("index.html", msgs="", all_rooms=total_rooms,server_rooms= server_rooms,private_rooms=private_rooms,public_rooms=public_rooms ,notifications=notifi, user_friends=user_friends, username=current_user.username, last_message_time_with_friends=last_message_time_with_friends)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -384,7 +391,7 @@ def get_dm_data(room):
     print(request.sid)
     if dm_obj is not None:
         now = datetime.datetime.now()
-        date = now.strftime("%d/%m/%Y %H:%M:%S")
+        date = now.strftime("%H:%M %d/%m/%Y") # no more seconds
         first_user = dm_obj.first_user
         second_user = dm_obj.second_user
         friend = ""
@@ -402,7 +409,16 @@ def get_dm_data(room):
             you = second_user
         else:
             you = first_user
-        emit("get-dm-data", {"date" : date, "friend" : friend, "you" : you}, broadcast=True)
+        friends_obj = friends.query.filter_by(friend_name=friend).first() # should never be None
+        you_friends_obj = friends.query.filter_by(friend_name=you).first() # should never be None
+        if friends_obj is not None and you_friends_obj is not None:
+            print("not none")
+            friends_obj.last_message_time = date
+            you_friends_obj.last_message_time = date
+            db.session.commit()
+            emit("get-dm-data", {"date" : date, "friend" : friend, "you" : you}, broadcast=True)
+        else:
+            print("None?")
 
 @socketio.on('leave')
 def on_leave(data):
@@ -414,10 +430,7 @@ def on_leave(data):
         pass
     room = data['room']
     leave_room(room)
-    if dm == "True":
-        send(current_user.username +' has left the dm', room=room)
-    else:
-        send(current_user.username + ' has left ' + room, room=room)
+    send(current_user.username + ' has left the conversation' , room=room)
 
 
 if __name__ == "__main__":

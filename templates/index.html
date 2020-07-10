@@ -128,18 +128,18 @@
             </div>
             <div class="col-md-6 col-xl-4 px-0">
       
-              <h6 class="font-weight-bold mb-3 text-center text-lg-left">Friends</h6>
+              <h6 class="font-weight-bold mb-3 text-center text-lg-left">Friends(GMT time)</h6>
               <div class="white z-depth-1 px-3 pt-3 pb-0 friend-div">
                 <ul class="list-unstyled friend-list">
-                  {% for i in user_friends %}
-                  <div id="friend-{{i}}">
+                  {% for i in range(user_friends|length) %}
+                  <div id="friend-{{user_friends[i]}}">
                     <li class="p-2">
                       <a class="d-flex justify-content-between">
                         <div class="text-small">
-                          <button type="button" class="btn btn-primary friend-username">{{i}}</button>
+                          <button type="button" class="btn btn-primary friend-username">{{user_friends[i]}}</button>
                         </div>
                         <div class="chat-footer">
-                          <p class="text-smaller text-muted mb-0 date">sent x min ago</p>
+                          <p class="text-smaller text-muted mb-0 date">{{last_message_time_with_friends[i]}}</p> <!--should be the same length-->
                           <span class="text-muted float-right"><i class="fas fa-mail-reply" aria-hidden="true"></i></span>
                         </div>
                       </a>
@@ -368,23 +368,26 @@ toastr.options = {
         $("#notification-length").text(notifi_length - 1)
         if(data["type"] == "Accept"){ // could be if it's undefined I guess
         current_date_time = new Date();
-        date =  current_date_time.getDate();+'-'+(current_date_time.getMonth()+1)+'-'+ current_date_time.getFullYear()
-        time = current_date_time.getHours() + ":" + current_date_time.getMinutes() + ":" + current_date_time.getSeconds();
+        date =  current_date_time.getDate()+'-'+(current_date_time.getMonth()+1)+'-'+ current_date_time.getFullYear()
+        time = current_date_time.getHours() + ":" + current_date_time.getMinutes();
         dateTime = time + ' ' + date;
+        console.log(dateTime)
           var create_msg = `
-          <li class="p-2">
-            <a class="d-flex justify-content-between">
-              <div class="text-small friend-name">
-                <button type="button" class="btn btn-primary friend-username">` + data["name"] + `</button>
-              </div>
-              <div class="chat-footer">
-                <p class="text-smaller text-muted mb-0 date">`+ dateTime +`</p>
-                <span class="text-muted float-right"><i class="fas fa-mail-reply" aria-hidden="true"></i></span>
-              </div>
-            </a>
-          </li>
+          <div id="friend-` +  data["name"] + `">
+            <li class="p-2">
+              <a class="d-flex justify-content-between">
+                <div class="text-small">
+                  <button type="button" class="btn btn-primary friend-username">` + data["name"] + `</button>
+                </div>
+                <div class="chat-footer">
+                  <p class="text-smaller text-muted mb-0 date">` + dateTime + `</p> <!--should be the same length-->
+                  <span class="text-muted float-right"><i class="fas fa-mail-reply" aria-hidden="true"></i></span>
+                </div>
+              </a>
+            </li>
+          </div>
           `
-          $(".friend-list").append(create_msg)
+          $(".friend-list").append(create_msg);
         }
         toastr["success"](msg, msg)
       }
@@ -435,6 +438,9 @@ toastr.options = {
     socket.on("friends-dm", function(data){
       if(room == data){
         toastr["error"]("You are already in this dm", "You are already in this dm")
+      }
+      else if(data=="Friend not found"){
+        toastr["error"]("Make sure you are not logged in to 2 diffrent users/this is your actual friend", "An unexpected error")
       }
       else{
         $("#messages").html("");
