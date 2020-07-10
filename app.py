@@ -8,9 +8,9 @@ import datetime
 import secrets
 import os
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.eviron["SECRET_KEY"]
+app.config['SECRET_KEY'] = os.environ["SECRET_KEY"]
 socketio = SocketIO(app,cors_allowed_origins=['http://chat-py.herokuapp.com', 'http://127.0.0.1:5000'])
-app.config["SQLALCHEMY_DATABASE_URI"] = os.eviron["HEROKU_POSTGRESQL_AMBER_URL"]
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ["HEROKU_POSTGRESQL_AMBER_URL"]
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 login_manager = LoginManager()
