@@ -6,10 +6,11 @@ from sqlalchemy import func
 from hashlib import md5
 import datetime
 import secrets
+import os
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'topsecret'
+app.config['SECRET_KEY'] = os.eviron["SECRET_KEY"]
 socketio = SocketIO(app,cors_allowed_origins=['http://chat-py.herokuapp.com', 'http://127.0.0.1:5000'])
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///somed2.db"
+app.config["SQLALCHEMY_DATABASE_URI"] = os.eviron["HEROKU_POSTGRESQL_AMBER_URL"]
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 login_manager = LoginManager()
@@ -184,13 +185,13 @@ def handle_message(message):
     #new_msg = AllHistory(message=message)
     #db.session.add(new_msg)
     #db.session.commit()
+    date = datetime.datetime.now().strftime("%H:%M %d/%m/%Y")
     try:
         print("In room")
         room=message["room"]
         print(message["room"])
         friend_obj = friends_dms.query.filter_by(room=room).first()
         print(friend_obj) # should be none if it doesn't find it
-        date = datetime.datetime.now().strftime("%H:%M %d/%m/%Y")
         if friend_obj != None:
             new_dm = dm_history(msg=message["message"], msg_from_user=current_user.username, users_dms=friend_obj, msg_time=date)
             db.session.add(new_dm)
@@ -209,11 +210,11 @@ def handle_message(data):
         print('received message room: ' + data["message"] + " from room " + data["room"])
         send(data["message"], room=data["room"])
 
-@socketio.on('add') # Todo: need to check if the rooms has a password or not.
-def add(data):
+@socketio.on('room-add') # Todo: need to check if the rooms has a password or not.
+def room_add(data):
     print("adding")
     room_name = data["name"]
-    if room_name.lower() == "main":
+    if room_name.lower() == "main" or room_name.lower() == "vanila" or room_name.lower() == "chocolate":
         room_exist = True
     rooms_obj = all_rooms.query.all()
     room_exist = False
@@ -233,11 +234,11 @@ def add(data):
             add_new_room = all_rooms(rooms= room_name, room_password=room_password, room_owner= owner)
             db.session.add(add_new_room)
             db.session.commit()
-            emit("add", room_name) # send if the room is private or not
+            emit("room-add", room_name) # send if the room is private or not
         else:
-            emit("add", "an unexpected error has occurred, please choose a different password") # send if the room is private or not
+            emit("room-add", "an unexpected error has occurred, please choose a different password") # send if the room is private or not
     else:
-        emit("add", "Room already exists")
+        emit("room-add", "Room already exists")
 
 @socketio.on('join')
 def on_join(data):

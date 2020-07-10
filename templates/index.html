@@ -205,21 +205,20 @@ toastr.options = {
                     </li>`
         $("#messages").append(create_msg)
     });
-    socket.on("add", function(msg){
-      console.log("add")
+    socket.on("room-add", function(msg){
       if(msg == "an unexpected error has occurred, please choose a different password"){
         toastr["error"](msg, "error")
       }
       if(msg != "Room already exists"){ // Todo check if the room has a password first before appending it to all of the dropdowns
         $(".dropdown-menu").append('<a class="dropdown-item this-is-navbar room">' + msg + '</a>')
         toastr["success"]("Your room has successfully created", "Room created")
+        $(document).ready(function(){
+          socket.emit("join", {"room" : room})
+        });
       }
       else{
         toastr["error"]("it seems like the room already exists", "Can't create the room")
       }
-    });
-    $(document).ready(function(){
-      socket.emit("join", {"room" : room})
     });
     $("#input").keydown(function(e){
       if(e.keyCode == 13){ // 13 is the enter key
@@ -301,7 +300,7 @@ toastr.options = {
       else{
         password = ""
       }
-      socket.emit('add', {"name" : created_room, "room password" : password})
+      socket.emit('room-add', {"name" : created_room, "room password" : password})
       socket.emit('leave', {"room" : room})
       socket.emit("join", {"room" : created_room})
       var room_msg = "You have joined " + created_room
