@@ -8,9 +8,9 @@ import datetime
 import secrets
 import os
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ["SECRET_KEY"]
+app.config['SECRET_KEY'] = "somereallysecretsecret123key"
 socketio = SocketIO(app,cors_allowed_origins=['http://chat-py.herokuapp.com', 'http://127.0.0.1:5000'])
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ["HEROKU_POSTGRESQL_GRAY_URL"]
+app.config["SQLALCHEMY_DATABASE_URI"] = "postgres://fqdkyjcpnbrzre:6f57fb1b42bb5e85b9e2d99e12135b331e5acacbdf219ee046f931bb379eb16c@ec2-54-75-244-161.eu-west-1.compute.amazonaws.com:5432/dfr3no0eocmh2b"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 login_manager = LoginManager()
