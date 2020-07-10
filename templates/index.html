@@ -123,6 +123,7 @@
                       <a class="d-flex justify-content-between">
                         <div class="text-small">
                           <button type="button" class="btn btn-primary friend-username">{{user_friends[i]}}</button>
+                          <p class="last-message text-muted">{{last_message[i]}}</p>
                         </div>
                         <div class="chat-footer">
                           {% if last_message_time_with_friends[i] is defined %} <!--could be a server msg-->
@@ -365,6 +366,7 @@ toastr.options = {
               <a class="d-flex justify-content-between">
                 <div class="text-small">
                   <button type="button" class="btn btn-primary friend-username">` + data["name"] + `</button>
+                  <p class="last-message text-muted"></p>
                 </div>
                 <div class="chat-footer">
                   <p class="text-smaller text-muted mb-0 date">` + dateTime + `</p>
@@ -438,24 +440,25 @@ toastr.options = {
     }); 
     socket.on("get-dm-data", function(data){
       console.log("recived")
-      friend_name = data["friend"]
+      friend_name = data["friend"] // potentiality too.
       potentiality_other_friend = data["you"] // to the other user the user who sent the message is "you" and he is the friend
       date = data["date"]
+      last_msg = data["last message"]
+      /*
       console.log("dm data")
       console.log("{{username}}")
       console.log(data["friend"])
       console.log(data["you"])
+      */
       console.log("{{username}}" == data["friend"])
       console.log("{{username}}" == data["you"])
       if("{{username}}" == data["friend"]){ // I have to identify the user first. The user could just inspect the elements and he could see this info.
-        $("#friend-" + potentiality_other_friend + " > .date").html(date);
-        $("#friend-" + potentiality_other_friend + " .date").html(date)
         $("#friend-" + potentiality_other_friend + " .date:first").html(date)
+        $("#friend-" + potentiality_other_friend + " .last-message:first").html(last_msg)
       }
       else if("{{username}}" == data["you"]){
-        $("#friend-" + friend_name + " > .date").html(date);
-        $("#friend-" + friend_name + " .date").html(date)
         $("#friend-" + friend_name + " .date:first").html(date)
+        $("#friend-" + friend_name + " .last-message:first").html(last_msg)
       }
     });
   function addNewlines(str) {
@@ -471,9 +474,9 @@ toastr.options = {
   }
   function sendMessage(){
     var inp = $("#input").val();
-    checkifDM();
     inp = htmlEntities(inp);
     socket.send({"message" : inp, "room" : room})
+    checkifDM();
   }
   function checkifDM(){
     socket.emit("get-dm-data", room)
