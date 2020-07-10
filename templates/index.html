@@ -171,17 +171,16 @@ toastr.options = {
 
     socket.on('connect', function() {
         socket.send("Connected!")
+        socket.emit("join", {"room" : "Main"})
     });
     socket.on("message", function(obj){ // add connected handler
         console.log(obj)
-        try{
-          console.log(typeof(obj))
-          msg = addNewlines(obj["msg"])
-          username = obj["user"]
+        if(obj["server"] != "yes"){
+        msg = addNewlines(obj["msg"])
+        username = obj["user"]
         }
-        catch(err){
-          console.log(typeof(obj))
-          msg = addNewlines(obj)
+        else{
+          msg = addNewlines(obj["msg"]) // not really needed but it's fine
           username = "Server"
         }
         console.log("recived")
@@ -210,15 +209,19 @@ toastr.options = {
       if(msg == "an unexpected error has occurred, please choose a different password"){
         toastr["error"](msg, "error")
       }
-      if(msg != "Room already exists"){ // Todo check if the room has a password first before appending it to all of the dropdowns
-        $(".dropdown-menu").append('<a class="dropdown-item this-is-navbar room">' + msg + '</a>')
-        toastr["success"]("Your room has successfully created", "Room created")
-        $(document).ready(function(){
-          socket.emit("join", {"room" : room})
-        });
+      if(msg == "Room already exists"){
+        toastr["error"]("it seems like the room already exists", "Can't create the room")
       }
       else{
-        toastr["error"]("it seems like the room already exists", "Can't create the room")
+        $(".dropdown-menu").append('<a class="dropdown-item this-is-navbar room">' + msg + '</a>')
+        toastr["success"]("Your room has successfully created", "Room created")
+        new_room = msg
+        $(document).ready(function(){
+          socket.emit('leave', {"room" : room})
+          socket.emit("join", {"room" : new_room})
+        });
+        $("#modalAddRoom .close").click()
+        $("#messages").html("");
       }
     });
     $("#input").keydown(function(e){
@@ -293,7 +296,6 @@ toastr.options = {
     $("#new-room").click(function(){
       var created_room = $("#new-room-input").val();
       $("#new-room-input").val("");
-      $("#messages").html("");
       console.log($('#room-password-check').is(':checked'))
       if($('#room-password-check').is(':checked')){
         password = $("#room-password").val()
@@ -302,12 +304,12 @@ toastr.options = {
         password = ""
       }
       socket.emit('room-add', {"name" : created_room, "room password" : password})
+      /*
       socket.emit('leave', {"room" : room})
       socket.emit("join", {"room" : created_room})
       var room_msg = "You have joined " + created_room
       toastr["success"](room_msg, "Room joined")
-      room = created_room
-      $("#modalAddRoom .close").click()
+      */
     });
     $("#modalAddFriend").on('shown.bs.modal', function () {
       $('#friend-username-val').trigger('focus');

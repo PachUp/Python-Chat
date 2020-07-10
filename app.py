@@ -217,30 +217,23 @@ def handle_message(message):
             new_dm = dm_history(msg=last_message, msg_from_user=current_user.username, users_dms=friend_obj, msg_time=date)
             db.session.add(new_dm)
             db.session.commit()
-        send({"msg" : message["message"], "user" : current_user.username, "time" : date}, room=room)
+        send({"msg" : message["message"], "user" : current_user.username, "time" : date, "server" : "no"}, room=room)
     except:
         print(type(message)) # server message
         if message == "Connected!":
-            send(current_user.username +" Has " + message)
-
-@socketio.on('message', namespace="/room")
-def handle_message(data):
-    if data == "Connected!":
-        send(current_user.username +" Has " + data)
-    else:
-        print('received message room: ' + data["message"] + " from room " + data["room"])
-        send(data["message"], room=data["room"])
+            send({"msg" : current_user.username +" Has " + message, "time" : date, "server" : "yes"})
 
 @socketio.on('room-add') # Todo: need to check if the rooms has a password or not.
 def room_add(data):
     print("adding")
     room_name = data["name"]
-    if room_name.lower() == "main" or room_name.lower() == "vanila" or room_name.lower() == "chocolate":
+    room_exist = False
+    room_name_compare = room_name.lower()
+    if room_name_compare == "main" or room_name_compare == "vanila" or room_name_compare == "chocolate":
         room_exist = True
     rooms_obj = all_rooms.query.all()
-    room_exist = False
     for i in rooms_obj:
-        if i.rooms.lower() == room_name.lower():
+        if i.rooms.lower() == room_name_compare:
             room_exist = True
     if room_exist is False:
         print("adding a room")
@@ -264,6 +257,7 @@ def room_add(data):
 @socketio.on('join')
 def on_join(data):
     #username = data['username']
+    date = datetime.datetime.now().strftime("%H:%M %d/%m/%Y")
     room = data['room']
     dm = "False"
     try:
@@ -273,9 +267,9 @@ def on_join(data):
     print("join " + room)
     join_room(room)
     if dm == "True":
-        send(current_user.username +' has entered the dm', room=room)
+        send({"msg" : current_user.username +' has entered the dm', "server" : "yes"}, room=room)
     else:
-        send(current_user.username +' has entered ' + room, room=room)
+        send({"msg" : current_user.username +' has entered ' + room, "server" : "yes"}, room=room)
 
 @socketio.on('friend-add')
 def friend_add(data):
@@ -458,7 +452,7 @@ def on_leave(data):
         pass
     room = data['room']
     leave_room(room)
-    send(current_user.username + ' has left the conversation' , room=room)
+    send({"msg" : current_user.username + ' has left the conversation', "server" : "yes"} , room=room)
 
 
 if __name__ == "__main__":
