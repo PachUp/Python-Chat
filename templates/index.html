@@ -99,20 +99,6 @@
                 
                 <ul class="list-unstyled chat">
                     <div id="messages">
-                        {% for i in msgs %}
-                            <li class="d-flex justify-content-between mb-4">
-                                <div class="chat-body white p-3 ml-2 z-depth-1">
-                                    <div class="header">
-                                        <strong class="primary-font">{{username}}</strong>
-                                        <small class="pull-right text-muted"><i class="far fa-clock"></i>min ago</small>
-                                    </div>
-                                    <hr class="w-100">
-                                    <p>
-                                        {{i.message}}
-                                    </p>
-                                </div>
-                            </li>
-                        {% endfor %}
                     </div>
                     <br>
                   <li class="white">
@@ -139,7 +125,9 @@
                           <button type="button" class="btn btn-primary friend-username">{{user_friends[i]}}</button>
                         </div>
                         <div class="chat-footer">
-                          <p class="text-smaller text-muted mb-0 date">{{last_message_time_with_friends[i]}}</p> <!--should be the same length-->
+                          {% if last_message_time_with_friends[i] is defined %} <!--could be a server msg-->
+                            <p class="text-smaller text-muted mb-0 date">⠀{{last_message_time_with_friends[i]}}</p> <!--should be the same length-->
+                          {% endif %}
                           <span class="text-muted float-right"><i class="fas fa-mail-reply" aria-hidden="true"></i></span>
                         </div>
                       </a>
@@ -205,7 +193,7 @@ toastr.options = {
                         <div class="chat-body white p-3 ml-2 z-depth-1">
                             <div class="header">
                                 <strong class="primary-font">`+ username +`</strong>
-                                <small class="pull-right text-muted"><i class="far fa-clock"></i>min ago</small>
+                                <small class="pull-right text-muted"><i class="far fa-clock"></i>` + obj["time"] + `</small>
                             </div>
                             <hr class="w-100">
                             <p id="new-msg">` + 
@@ -368,9 +356,9 @@ toastr.options = {
         $("#notification-length").text(notifi_length - 1)
         if(data["type"] == "Accept"){ // could be if it's undefined I guess
         current_date_time = new Date();
-        date =  current_date_time.getDate()+'-'+(current_date_time.getMonth()+1)+'-'+ current_date_time.getFullYear()
+        date =  current_date_time.getDate()+'/'+(current_date_time.getMonth()+1)+'/'+ current_date_time.getFullYear()
         time = current_date_time.getHours() + ":" + current_date_time.getMinutes();
-        dateTime = time + ' ' + date;
+        dateTime = ' ' + time + ' ' + date;
         console.log(dateTime)
           var create_msg = `
           <div id="friend-` +  data["name"] + `">
@@ -380,7 +368,7 @@ toastr.options = {
                   <button type="button" class="btn btn-primary friend-username">` + data["name"] + `</button>
                 </div>
                 <div class="chat-footer">
-                  <p class="text-smaller text-muted mb-0 date">` + dateTime + `</p> <!--should be the same length-->
+                  <p class="text-smaller text-muted mb-0 date">` + dateTime + `</p>
                   <span class="text-muted float-right"><i class="fas fa-mail-reply" aria-hidden="true"></i></span>
                 </div>
               </a>
@@ -408,24 +396,23 @@ toastr.options = {
       else{
         var sent_user = data["user"] // array
         var user_msg = data["msg"] // array same length
+        var msg_time = data["time"] // array same length
         console.log("in")
         if(entered_room != room){
           for(var i = 0; i<user_msg.length; i++){
             $("#messages").append(`
-            <div id=friend-`+ data["user"] +`>
-              <li class="d-flex justify-content-between mb-4">
-                <div class="chat-body white p-3 ml-2 z-depth-1">
-                  <div class="header">
-                    <strong class="primary-font">` + sent_user[i] +`</strong>
-                    <small class="pull-right text-muted"><i class="far fa-clock"></i>min ago</small>
-                  </div>
-                    <hr class="w-100">
-                    <p>`
-                      + user_msg[i] +
-                    `</p>
+            <li class="d-flex justify-content-between mb-4">
+              <div class="chat-body white p-3 ml-2 z-depth-1">
+                <div class="header">
+                  <strong class="primary-font">` + sent_user[i] +`</strong>
+                  <small class="pull-right text-muted"><i class="far fa-clock"></i>` + msg_time[i] + `</small>
                 </div>
-              </li>
-            </div>
+                  <hr class="w-100">
+                  <p>`
+                    + user_msg[i] +
+                  `</p>
+              </div>
+            </li>
             `)
           }
           console.log("in")

@@ -9,7 +9,7 @@ import secrets
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'topsecret'
 socketio = SocketIO(app,cors_allowed_origins=['http://chat-py.herokuapp.com', 'http://127.0.0.1:5000'])
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///somed1.db"
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///somed2.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 login_manager = LoginManager()
@@ -190,11 +190,12 @@ def handle_message(message):
         print(message["room"])
         friend_obj = friends_dms.query.filter_by(room=room).first()
         print(friend_obj) # should be none if it doesn't find it
+        date = datetime.datetime.now().strftime("%H:%M %d/%m/%Y")
         if friend_obj != None:
-           new_dm = dm_history(msg=message["message"], msg_from_user=current_user.username, users_dms=friend_obj)
-           db.session.add(new_dm)
-           db.session.commit()
-        send({"msg" : message["message"], "user" : current_user.username}, room=room)
+            new_dm = dm_history(msg=message["message"], msg_from_user=current_user.username, users_dms=friend_obj, msg_time=date)
+            db.session.add(new_dm)
+            db.session.commit()
+        send({"msg" : message["message"], "user" : current_user.username, "time" : date}, room=room)
     except:
         print(type(message)) # server message
         if message == "Connected!":
@@ -375,13 +376,16 @@ def show_dm_history(friend_name):
         chat_history = {}
         sent_user = []
         user_msg = []
+        msg_time = []
         for i in dm_obj.history:
             user_msg.append(i.msg) 
             sent_user.append(i.msg_from_user)
+            msg_time.append(i.msg_time)
         chat_history["user"] = sent_user
         chat_history["msg"] = user_msg
         chat_history["room"] = dm_obj.room
         chat_history["friend"] = friend_name
+        chat_history["time"] = msg_time
         emit("dm-history", chat_history)
 
 @socketio.on('get-dm-data')
