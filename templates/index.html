@@ -173,6 +173,9 @@ toastr.options = {
         socket.send("Connected!")
         socket.emit("join", {"room" : "Main"})
     });
+    socket.on('disconnect', function(){
+      socket.emit("disconnect")
+    });
     socket.on("message", function(obj){ // add connected handler
         console.log(obj)
         if(obj["server"] != "yes"){

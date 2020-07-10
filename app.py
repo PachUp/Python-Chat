@@ -10,7 +10,7 @@ import os
 app = Flask(__name__)
 app.config['SECRET_KEY'] = "somereallysecretsecret123key"
 socketio = SocketIO(app,cors_allowed_origins=['http://chat-py.herokuapp.com', 'http://127.0.0.1:5000'])
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///db12.db"
+app.config["SQLALCHEMY_DATABASE_URI"] = "postgres://fdrsteoywvaxhk:1768d949fb39fc2d085a805be2c494ec5b92c66e47ef521f140640d269d72bba@ec2-54-75-246-118.eu-west-1.compute.amazonaws.com:5432/d7ik4kbtgotgk4"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 login_manager = LoginManager()
@@ -22,6 +22,7 @@ class users(db.Model, UserMixin):
     username = db.Column(db.TEXT)
     password = db.Column(db.TEXT)
     email = db.Column(db.TEXT)
+    active_sockets = db.Column(db.ARRAY(db.TEXT))
     notifications = db.relationship('notifications', backref='user_notification')
     friends = db.relationship('friends', backref='user_friends')
 
@@ -267,9 +268,9 @@ def on_join(data):
     print("join " + room)
     join_room(room)
     if dm == "True":
-        send({"msg" : current_user.username +' has entered the dm', "server" : "yes"}, room=room)
+        send({"msg" : current_user.username +' has entered the dm', "server" : "yes", "time" : date}, room=room)
     else:
-        send({"msg" : current_user.username +' has entered ' + room, "server" : "yes"}, room=room)
+        send({"msg" : current_user.username +' has entered ' + room, "server" : "yes", "time" : date}, room=room)
 
 @socketio.on('friend-add')
 def friend_add(data):
@@ -445,6 +446,8 @@ def get_dm_data(room):
 @socketio.on('leave')
 def on_leave(data):
     #username = data['username']
+    now = datetime.datetime.now()
+    date = now.strftime("%H:%M %d/%m/%Y")
     dm = "False"
     try:
         dm = data["dm"]
@@ -452,8 +455,24 @@ def on_leave(data):
         pass
     room = data['room']
     leave_room(room)
-    send({"msg" : current_user.username + ' has left the conversation', "server" : "yes"} , room=room)
+    send({"msg" : current_user.username + ' has left the conversation', "server" : "yes", "time" : date} , room=room)
 
+@socketio.on('disconnect')
+def test_disconnect():
+    print(current_user.username)
+    print(current_user.active_sockets)
+    print('Client disconnected')
+
+@socketio.on('connect')
+def test_disconnect():
+    print(current_user.username)
+    print(request.sid)
+    """
+    current_sockets = current_user.active_sockets
+    current_sockets.append(request.sid)
+    current_user.active_sockets = current_sockets
+    """
+    print('Client connect')
 
 if __name__ == "__main__":
     socketio.run(app, debug=True)
