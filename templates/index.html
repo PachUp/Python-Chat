@@ -367,10 +367,10 @@ toastr.options = {
         var notifi_length = $("#notification-length").text()
         $("#notification-length").text(notifi_length - 1)
         if(data["type"] == "Accept"){ // could be if it's undefined I guess
-        var current_date_time = new Date();
-        var date =  current_date_time.getDate();+'-'+(current_date_time.getMonth()+1)+'-'+ current_date_time.getFullYear()
-        var time = current_date_time.getHours() + ":" + current_date_time.getMinutes() + ":" + current_date_time.getSeconds();
-        var dateTime = time + ' ' + date;
+        current_date_time = new Date();
+        date =  current_date_time.getDate();+'-'+(current_date_time.getMonth()+1)+'-'+ current_date_time.getFullYear()
+        time = current_date_time.getHours() + ":" + current_date_time.getMinutes() + ":" + current_date_time.getSeconds();
+        dateTime = time + ' ' + date;
           var create_msg = `
           <li class="p-2">
             <a class="d-flex justify-content-between">
@@ -447,12 +447,20 @@ toastr.options = {
     socket.on("get-dm-data", function(data){
       console.log("recived")
       friend_name = data["friend"]
+      potentiality_other_friend = data["you"] // to the other user the user who sent the message is "you" and he is the friend
       date = data["date"]
       console.log("dm data")
       console.log("{{username}}")
       console.log(data["friend"])
       console.log(data["you"])
-      if("{{username}}" == data["friend"] || "{{username}}" == data["you"]){ // I have to identify the user first. The user could just inspect the elements and he could see this info.
+      console.log("{{username}}" == data["friend"])
+      console.log("{{username}}" == data["you"])
+      if("{{username}}" == data["friend"]){ // I have to identify the user first. The user could just inspect the elements and he could see this info.
+        $("#friend-" + potentiality_other_friend + " > .date").html(date);
+        $("#friend-" + potentiality_other_friend + " .date").html(date)
+        $("#friend-" + potentiality_other_friend + " .date:first").html(date)
+      }
+      else if("{{username}}" == data["you"]){
         $("#friend-" + friend_name + " > .date").html(date);
         $("#friend-" + friend_name + " .date").html(date)
         $("#friend-" + friend_name + " .date:first").html(date)
