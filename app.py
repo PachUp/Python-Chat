@@ -9,7 +9,7 @@ import secrets
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'topsecret'
 socketio = SocketIO(app,cors_allowed_origins=['http://chat-py.herokuapp.com', 'http://127.0.0.1:5000'])
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///s.db"
+app.config["SQLALCHEMY_DATABASE_URI"] = "postgres://wmiprlaxkkcucm:e9df79a669615a7dccb0e650fd71554af72912c877fa7dddfc73690ccd61a7e2@ec2-54-247-78-30.eu-west-1.compute.amazonaws.com:5432/d5jhqg14qdt1sd"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 login_manager = LoginManager()
