@@ -345,12 +345,22 @@ toastr.options = {
       if(this.textContent == "Reject"){
         var index = $dropDownItems.index(this) - 1
         var text = $dropDownItems.eq(index).text()
+        console.log(index)
+        for(var i = $dropDownItems.index(this) - 1; i <= $dropDownItems.index(this)+3; i++){
+          $dropDownItems.eq(i).remove()
+          console.log( $dropDownItems.eq(i).text())
+        }
         socket.emit("friend-request-handler", {"type" : "Reject", "notification" : text})
         console.log(text)
       }
       else if(this.textContent == "Accept"){
         var index = $dropDownItems.index(this) - 3
         var text = $dropDownItems.eq(index).text()
+        console.log(index)
+        for(var i = $dropDownItems.index(this) - 3; i <= $dropDownItems.index(this)+ 1; i++){
+          $dropDownItems.eq(i).remove()
+          console.log( $dropDownItems.eq(i).text())
+        }
         console.log(text)
         socket.emit("friend-request-handler", {"type" : "Accept", "notification" : text})
       }
@@ -360,37 +370,11 @@ toastr.options = {
       msg = data["msg"]
       if(msg != "Error"){
         notification = data["notification"]
-        console.log(notification)
-        var text_index = $(".dropdown-item:contains(" + notification + ")").eq(0).index()
-        console.log(text_index)
-        for(var i =text_index; i>=text_index - 3; i--){
-          $(".notifi-drop").children().eq(i).remove()
-        } 
         var notifi_length = $("#notification-length").text()
         $("#notification-length").text(notifi_length - 1)
         if(data["type"] == "Accept"){ // could be if it's undefined I guess
-        current_date_time = new Date();
-        date =  current_date_time.getDate()+'/'+(current_date_time.getMonth()+1)+'/'+ current_date_time.getFullYear()
-        time = current_date_time.getHours() + ":" + current_date_time.getMinutes();
-        dateTime = ' ' + time + ' ' + date;
-        console.log(dateTime)
-          var create_msg = `
-          <div id="friend-` +  data["name"] + `">
-            <li class="p-2">
-              <a class="d-flex justify-content-between">
-                <div class="text-small">
-                  <button type="button" class="btn btn-primary friend-username">` + data["name"] + `</button>
-                  <p class="last-message text-muted"></p>
-                </div>
-                <div class="chat-footer">
-                  <p class="text-smaller text-muted mb-0 date">` + dateTime + `</p>
-                  <span class="text-muted float-right"><i class="fas fa-mail-reply" aria-hidden="true"></i></span>
-                </div>
-              </a>
-            </li>
-          </div>
-          `
-          $(".friend-list").append(create_msg);
+        socket.emit("add-friend-requester-live", {"accepted from" : "{{username}}", "requester" : data["name"]})
+        addFriendToList(data["name"])
         }
         toastr["success"](msg, msg)
       }
@@ -476,6 +460,14 @@ toastr.options = {
         $("#friend-" + friend_name + " .last-message:first").html(last_msg)
       }
     });
+    socket.on("add-friend-requester-live", function(data){
+      console.log("add-friend-requester-live")
+      if(data["friend"] == "{{username}}"){
+        console.log(data["accepted from"])
+        addFriendToList(data["accepted from"]);
+        toastr["success"]("Your friend request was accepted from " + data["accepted from"], "Friend request")
+      }
+    });
   function addNewlines(str) {
   var result = '';
   while (str.length > 0) {
@@ -496,6 +488,31 @@ toastr.options = {
   }
   function checkifDM(){
     socket.emit("get-dm-data", room)
+  }
+  function addFriendToList(friend_name){
+    current_date_time = new Date();
+    date =  current_date_time.getDate()+'/'+(current_date_time.getMonth()+1)+'/'+ current_date_time.getFullYear()
+    time = current_date_time.getHours() + ":" + current_date_time.getMinutes();
+    dateTime = ' ' + time + ' ' + date;
+    console.log(dateTime)
+      var create_msg = `
+      <div id="friend-` +  friend_name + `">
+        <li class="p-2">
+          <a class="d-flex justify-content-between">
+            <div class="text-small">
+              <button type="button" class="btn btn-primary friend-username">` + friend_name + `</button>
+              <p class="last-message text-muted"></p>
+            </div>
+            <div class="chat-footer">
+              <p class="text-smaller text-muted mb-0 date">` + dateTime + `</p>
+              <span class="text-muted float-right"><i class="fas fa-mail-reply" aria-hidden="true"></i></span>
+            </div>
+          </a>
+        </li>
+      </div>
+      `
+      $(".friend-list").append(create_msg);
+
   }
 </script>
 <style>

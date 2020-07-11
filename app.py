@@ -311,6 +311,7 @@ def friend_add(data):
 
 @socketio.on('friend-request-handler')
 def friend_request_handler(data):
+    print("friend-request-handler")
     request_status = data["type"]
     request_data = data["notification"]
     print(request_status)
@@ -320,20 +321,24 @@ def friend_request_handler(data):
             if request_status == "Accept":
                 request_name = request_data.split(' ')[0]
                 requester = users.query.filter_by(username=request_name).first()
-                new_friend_requester = friends(friend_name=current_user.username, user_friends=requester)
-                new_friend = friends(friend_name=request_name, user_friends=current_user)
-                hash_salt = secrets.token_hex(6) # bascily creates 6 random chars and combines them to a string
-                room_hash = md5(str(current_user.username + requester.username + str(datetime.datetime.now()) + hash_salt).encode('utf-8')).hexdigest() # hashing MD5 with salt 
-                print(room_hash)
-                create_dm = friends_dms(first_user=current_user.username, second_user=requester.username,room=room_hash)
-                notifications.query.filter_by(notification=request_data, user_id=current_user.id).delete()
-                db.session.add(new_friend)
-                db.session.add(new_friend_requester)
-                db.session.add(create_dm)
-                db.session.commit()
-                emit("friend-request-handler", {"msg" : "The friend was added!", "notification": request_data, "type" : request_status, "name" : request_name})
-                action = True
-                break
+                if requester is not None:
+                    new_friend_requester = friends(friend_name=current_user.username, user_friends=requester)
+                    new_friend = friends(friend_name=request_name, user_friends=current_user)
+                    hash_salt = secrets.token_hex(6) # bascily creates 6 random chars and combines them to a string
+                    room_hash = md5(str(current_user.username + requester.username + str(datetime.datetime.now()) + hash_salt).encode('utf-8')).hexdigest() # hashing MD5 with salt 
+                    print(room_hash)
+                    create_dm = friends_dms(first_user=current_user.username, second_user=requester.username,room=room_hash)
+                    notifications.query.filter_by(notification=request_data, user_id=current_user.id).delete()
+                    db.session.add(new_friend)
+                    db.session.add(new_friend_requester)
+                    db.session.add(create_dm)
+                    db.session.commit()
+                    emit("friend-request-handler", {"msg" : "The friend was added!", "notification": request_data, "type" : request_status, "name" : request_name})
+                    action = True
+                    break
+                else:
+                    action = False # to make sure
+                    break
             elif request_status == "Reject":
                     print("del")
                     notifications.query.filter_by(notification=request_data, user_id=current_user.id).delete()
@@ -343,6 +348,7 @@ def friend_request_handler(data):
                     break
     if action is False:
         emit("friend-request-handler", {"msg" : "Error", "notification": "None"})
+
 
 @socketio.on('friends-dm')
 def friends_dm(friend_username):
@@ -443,6 +449,13 @@ def get_dm_data(room):
             emit("get-dm-data", {"date" : date, "friend" : friend, "you" : you, "last message" : last_friends_msg}, broadcast=True)
         else:
             print("None?")
+
+@socketio.on("add-friend-requester-live") # adding the requester to the friend list live too.
+def add_friend_requester_live(data):
+    print("checking if user is online")
+    emit("add-friend-requester-live",{"friend" : data["requester"], "accepted from" : data["accepted from"]},broadcast=True)
+
+
 
 @socketio.on('leave')
 def on_leave(data):
