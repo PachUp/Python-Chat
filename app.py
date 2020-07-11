@@ -10,7 +10,7 @@ import os
 app = Flask(__name__)
 app.config['SECRET_KEY'] = "somereallysecretsecret123key"
 socketio = SocketIO(app,cors_allowed_origins=['http://chat-py.herokuapp.com', 'http://127.0.0.1:5000'])
-app.config["SQLALCHEMY_DATABASE_URI"] = "postgres://fdrsteoywvaxhk:1768d949fb39fc2d085a805be2c494ec5b92c66e47ef521f140640d269d72bba@ec2-54-75-246-118.eu-west-1.compute.amazonaws.com:5432/d7ik4kbtgotgk4"
+app.config["SQLALCHEMY_DATABASE_URI"] = "postgres://mopkgbcvkobcpq:da1f40a600263bf6e98c3cb770205a704268b5cd97516511e01b7aa15675843a@ec2-54-75-229-28.eu-west-1.compute.amazonaws.com:5432/d3o116jfv4321a"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 login_manager = LoginManager()
@@ -107,7 +107,9 @@ def index():
         last_message.append(i.last_text_message)
     all_users = users.query.all()
     for i in all_users:
-        if(len(i.active_sockets) > 0):
+        if i.username == current_user.username:
+            continue
+        if len(i.active_sockets) > 0:
             online_users.append("online") # I can do that because in the html file I loop though all the users by the same order
         else:
             online_users.append("offline")
@@ -511,11 +513,11 @@ def test_disconnect():
     socket = request.sid
     if socket is not None:
         print("client connected sid: " + socket)
+        if(len(current_user.active_sockets) == 0):
+            emit("user-online", {"username" : current_user.username}, broadcast=True)
         socket_obj = activeSockets(user_active_sockets=current_user, socket=socket)
         db.session.add(socket_obj)
         db.session.commit()
-        if(len(current_user.active_sockets) == 0):
-            emit("user-online", {"username" : current_user.username}, broadcast=True)
     print('Client connect')
 
 if __name__ == "__main__":
