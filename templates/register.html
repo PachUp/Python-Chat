@@ -2,6 +2,8 @@
 <script src="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<script src="{{url_for('static', filename='js/register.js')}}"></script>
+<link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='css/register.css') }}" />
 <head>
     <meta charset="UTF-8">
     <meta http-equiv='X-UA-Compatible' content='IE=edge'>
@@ -29,7 +31,7 @@
                             <div class="form-group">
                                 <label for="password" class="text-info">Password:</label><br>
                                 <input type="password"  name="password" id="password" class="form-control">
-                                <i class="fa fa-eye icon" onclick="myFunction()" id="eye"></i>
+                                <i class="fa fa-eye icon" onclick="eyeFun()" id="eye"></i>
                                 <p id="pass-wrong"></p>
                             </div>
                             <div class="form-group">
@@ -49,115 +51,19 @@
     </div>
     
 </body>
-<style>
-body {
-  margin: 0;
-  padding: 0;
-  background-color: #17a2b8;
-  height: 100vh;
-}
-#login .container #login-row #login-column #login-box {
-  margin-top: 120px;
-  max-width: 100%;
-  height: 520px;
-  border: 1px solid #9C9C9C;
-  background-color: #EAEAEA;
-}
-#button-id{
-    margin-left: 220px;
-}
-.blockquote-footer{
-    font-size: 100%;
-}
-#id{
-    color: green;
-}
-.icon {
-  margin-bottom: initial;
-  padding: 8px;
-  background: dodgerblue;
-  color: white;
-  min-width: 45px;
-  text-align: center;
-}
-.form-group.background{
-  background: url(klematis.jpg) repeat;
-  border: 2px solid black;
-}
-.form-group.transbox{
-    margin: 30px;
-  background-color: #ffffff;
-  border: 1px solid black;
-  opacity: 0.6;
-}
-</style>
 <script>
-function myFunction() {
-  var x = document.getElementById("password");
-  if(document.getElementById("eye").className == "fa fa-eye-slash icon"){
-    document.getElementById("eye").className = "fa fa-eye icon";
-  }
-  else{
-    document.getElementById("eye").className = "fa fa-eye-slash icon";
-  }
-  if (x.type === "password") {
-    x.type = "text";
-  } else {
-    x.type = "password";
-  }
-}
-    $(document).ready(function(){
-        $("#button-id").click(function(){
-            var data = $("form").serialize();
-            console.log(data);
-            $.ajax({
-                type: "POST",
-                url: 'register',
-                data: data,
-                success: function(res){
-                    if(res == "all"){
-                        $("#user-exist").css("color", "red");
-                        $("#email-exist").css("color", "red");
-                        $("#email-contain").css("color", "red");
-                    }
-                    else if(res == "email contain"){
-                        $("#user-exist").css("color", "green");
-                        $("#email-exist").css("color", "green");
-                        $("#email-contain").css("color", "red");
-                    }
-                    else if(res == "email exist"){
-                        $("#user-exist").css("color", "green");
-                        $("#email-exist").css("color", "red");
-                        $("#email-contain").css("color", "green");
-                    }
-                    else if(res=="username exist"){
-                        $("#user-exist").css("color", "red");
-                        $("#email-exist").css("color", "green");
-                        $("#email-contain").css("color", "green");
-                    } 
-                    else if(res=="email"){
-                        $("#user-exist").css("color", "green");
-                        $("#email-exist").css("color", "green");
-                        $("#email-contain").css("color", "red");
-                    }
-                    else if(res == "username exist email contain"){
-                        $("#user-exist").css("color", "red");
-                        $("#email-exist").css("color", "green");
-                        $("#email-contain").css("color", "red");
-                    }
-                    else if(res == "username exist email exist"){
-                        $("#user-exist").css("color", "red");
-                        $("#email-exist").css("color", "red");
-                        $("#email-contain").css("color", "green");
-                    }
-                    else{
-                        $("#user-exist").css("color", "green");
-                        $("#email-exist").css("color", "green");
-                        $("#email-contain").css("color", "green");
-                        $(location).attr("href", "/login");
-                    }
-                }
-            });
-        });
-    });
+    function eyeFun() { // used in register.html
+        var x = document.getElementById("password");
+        if(document.getElementById("eye").className == "fa fa-eye-slash icon"){
+            document.getElementById("eye").className = "fa fa-eye icon";
+        }
+        else{
+            document.getElementById("eye").className = "fa fa-eye-slash icon";
+        }
+        if (x.type === "password") {
+            x.type = "text";
+        } else {
+            x.type = "password";
+        }
+    }
 </script>

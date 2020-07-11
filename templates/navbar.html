@@ -6,6 +6,8 @@
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
 <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 <script src="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
+<script src="{{url_for('static', filename='js/navbar.js')}}"></script>
+<link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}" />
 <head>
     <meta charset="UTF-8">
     <meta http-equiv='X-UA-Compatible' content='IE=edge'>
@@ -84,18 +86,3 @@
     {% block body%}{% endblock %}
 </body>
 </html>
-<style>
-    .bs-example{
-        margin: 20px;
-    }
-</style>
-<script>
-$('.dropdown-nevbar').on('show.bs.dropdown', function() {
-    $(this).find('.dropdown-menu-nevbar').first().stop(true, true).slideDown();
-  });
-
-  // Add slideUp animation to Bootstrap dropdown when collapsing.
-  $('.dropdown-nevbar').on('hide.bs.dropdown', function() {
-    $(this).find('.dropdown-menu-nevbar').first().stop(true, true).slideUp();
-  });
-</script>

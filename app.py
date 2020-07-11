@@ -218,8 +218,10 @@ def handle_message(message):
             new_dm = dm_history(msg=last_message, msg_from_user=current_user.username, users_dms=friend_obj, msg_time=date)
             db.session.add(new_dm)
             db.session.commit()
-        print("No exception")
-        send({"msg" : message["message"], "user" : current_user.username, "time" : date, "server" : "no"}, room=room)
+            print("No exception")
+            send({"msg" : message["message"], "user" : current_user.username, "time" : date, "server" : "no"}, room=room)
+        else:
+            send({"msg" : message["message"], "user" : current_user.username, "time" : date, "server" : "no"}, room=room)
     except:
         print(type(message)) # server message
         if message == "Connected!":

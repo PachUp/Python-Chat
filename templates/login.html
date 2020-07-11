@@ -5,7 +5,8 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-<!------ Include the above in your HEAD tag ---------->
+<script src="{{url_for('static', filename='js/login.js')}}"></script>
+<link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}" />
 <head>
     <meta charset="UTF-8">
     <meta http-equiv='X-UA-Compatible' content='IE=edge'>
@@ -36,7 +37,7 @@
                                     </div>
                                     <input  type="password" name="password" id="password" class="form-control">
                                 </div>
-                                <i class="fa fa-eye icon" onclick="myFunction()" id="eye"></i>
+                                <i class="fa fa-eye icon" onclick="eyeFun()" id="eye"></i>
                                 
                                 <div class="text-right">
                                     <input class="form-check-input up" type="checkbox" id="autoSizingCheck" checked="checked" disabled>
@@ -58,128 +59,23 @@
                     </div>
                 </div>
             </div>
-            
         </div>
     </div>
-    
 </body>
-<style>
-body {
-  background-color: #17a2b8;
-  height: 100vh;
-}
-#login .container #login-row #login-column #login-box {
-  margin-top: 120px;
-  max-width: 700px;
-  height: 425px;
-  border: 1px solid #9C9C9C;
-  background-color: #EAEAEA;
-}
-.up{
-    margin-top: -30px;
-}
-
-#autoSizingCheck{
-    height: 25px;
-}
-.icon {
-  padding: 10px;
-  background: #00a9ff;
-  color: white;
-  min-width: 50px;
-  text-align: center;
-}
-.btn-cap{
-    margin-top: -40;
-}
-#recaptcha{
-    position: absolute;
-    bottom: 70px;
-}
-#reg{
-    margin-top: 99;
-}
-.fa-lock{
-    width: 1px;
-}
-</style>
 <script>
-toastr.options = {
-  "closeButton": true,
-  "debug": false,
-  "newestOnTop": true,
-  "progressBar": true,
-  "positionClass": "toast-top-right",
-  "preventDuplicates": false,
-  "showDuration": "300",
-  "hideDuration": "1000",
-  "timeOut": "5000",
-  "extendedTimeOut": "1000",
-  "showEasing": "swing",
-  "hideEasing": "linear",
-  "showMethod": "fadeIn",
-  "hideMethod": "fadeOut"
-}
-function myFunction() {
-  var x = document.getElementById("password");
-  if(document.getElementById("eye").className == "fa fa-eye-slash icon"){
-    document.getElementById("eye").className = "fa fa-eye icon";
-  }
-  else{
-    document.getElementById("eye").className = "fa fa-eye-slash icon";
-  }
-  if (x.type === "password") {
-    x.type = "text";
-  } else {
-    x.type = "password";
-  }
-}
-    $(document).ready(function(){
-        $("#button-id").click(function(){
-            var res = grecaptcha.getResponse();
-            console.log(res.length);
-            if(res.length != 0){ //It should be an empty string 
-                var data = $("form").serialize();
-                if ($('#autoSizingCheck').is(':checked')){
-                    data = data + "&CheckBox=" + "True" // maybe change in the future(that's why I have the +), option is disabled for now
-                }
-                else{
-                    data = data + "&CheckBox=" + "True" // maybe change in the future(that's why I have the +), option is disabled for now
-                }
-                console.log(data);
-                $.ajax({
-                    type: "POST",
-                    url: 'login',
-                    data: data,
-                    success: function(res){
-                        console.log(res)
-                        if(res=="username"){
-                            grecaptcha.reset();
-                            toastr["error"]("This username is not in my database.", "This username doesn't exist")
-                        } 
-                        else if(res=="password"){
-                            grecaptcha.reset();
-                            toastr["error"]("Not the right password. Please try again.", "Wrong password")
-                            
-                        }
-                        else{
-                            if(res =="email"){
-                                grecaptcha.reset();
-                                toastr["error"]("email error", "email error")
-                            }
-                            else if(res=="Great"){
-                                $("#pass-wrong").html("great");
-                                $("#user-wrong").html("great");
-                                toastr["success"]("Login you in!", "Success!")
-                                $(location).attr("href", "")
-                            }
-                        }
-                    }
-                });
-            }
-            else{
-                toastr["error"]("You have to check the captcha box to make sure that you are a human", "Please check the captcha box")
-            }
-        });
-    });
+    function eyeFun() { // is it used in the html file
+        var x = document.getElementById("password");
+        if(document.getElementById("eye").className == "fa fa-eye-slash icon"){
+            document.getElementById("eye").className = "fa fa-eye icon";
+        }
+        else{
+            document.getElementById("eye").className = "fa fa-eye-slash icon";
+        }
+        if (x.type === "password") {
+            x.type = "text";
+        } 
+        else {
+            x.type = "password";
+        }
+    }
 </script>
