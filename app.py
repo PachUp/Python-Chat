@@ -8,9 +8,9 @@ import datetime
 import secrets
 import os
 app = Flask(__name__)
-app.config['SECRET_KEY'] = "somereallysecretsecret123key"
+app.config['SECRET_KEY'] = os.environ["SECRET_KEY_C"]
 socketio = SocketIO(app,cors_allowed_origins=['http://chat-py.herokuapp.com', 'http://127.0.0.1:5000'])
-app.config["SQLALCHEMY_DATABASE_URI"] = "postgres://mopkgbcvkobcpq:da1f40a600263bf6e98c3cb770205a704268b5cd97516511e01b7aa15675843a@ec2-54-75-229-28.eu-west-1.compute.amazonaws.com:5432/d3o116jfv4321a"
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ["HEROKU_POSTGRESQL_CHARCOAL_URL"]
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 login_manager = LoginManager()
@@ -142,13 +142,13 @@ def login():
         print(check_box)
         send = ""
         user_check = bool(users.query.filter_by(username=username).first())
-        pass_check = bool(users.query.filter_by(password=password).first())
+        pass_check = bool(users.query.filter_by(password=md5(password.encode("utf-8")).hexdigest()).first())
         if user_check and not pass_check:
             return "password"
         elif not user_check:
             return "username"
         else:
-            user = users.query.filter_by(username=username,password=password).first()
+            user = users.query.filter_by(username=username,password=md5(password.encode("utf-8")).hexdigest()).first()
             db.session.commit()
             app.permanent_session_lifetime = False
             if check_box == "True": #always true for now
@@ -180,10 +180,10 @@ def register():
         user_check = bool(users.query.filter(func.lower(users.username) == func.lower(username)).first())
         email_check = bool(users.query.filter_by(email=email).first())
         
-        if (email_check) and ("@gmail.com" not in email) and user_check:
+        if (email_check) and (email[-10:] not in "@gmail.com" or email.count("@gmail.com") > 1) and user_check:
             print("all")
             return "all"
-        elif user_check and ("@gmail.com" not in email):
+        elif user_check and (email[-10:] not in "@gmail.com" or email.count("@gmail.com") > 1):
             print("u e c")
             return "username exist email contain"
         elif user_check and email_check:
@@ -191,12 +191,12 @@ def register():
             return "username exist email exist"
         elif email_check:
             return "email exist"
-        elif "@gmail.com" not in email:
+        elif email[-10:] not in "@gmail.com" or email.count("@gmail.com") > 1:
             return "email contain"
         elif user_check:
             return "username exist"
         else:
-            new_user = users(username = username, password=password, email=email)
+            new_user = users(username = username, password=md5(password.encode("utf-8")).hexdigest(), email=email)
             db.session.add(new_user)
             db.session.commit()
             return redirect('/')
@@ -323,18 +323,25 @@ def friend_add(data):
             if i.username == friend_username:
                 found = True
                 sent = False
-                user = users.query.filter_by(username=friend_username).first()
-                notification_msg = current_user.username + " Has added you as a friend!"
-                for j in user.notifications:
-                    if j.notification == notification_msg:
-                        sent = True
-                if not sent:
-                    notifi = notifications(notification=notification_msg, user_notification=user)
-                    db.session.add(notifi)
-                    db.session.commit()
-                    emit("friend-add", "Friend request sent!")
+                received = False
+                for j in current_user.notifications:
+                    if friend_username in j.notification:
+                        received = True
+                if not received:
+                    user = users.query.filter_by(username=friend_username).first()
+                    notification_msg = current_user.username + " Has added you as a friend!"
+                    for j in user.notifications:
+                        if j.notification == notification_msg:
+                            sent = True
+                    if not sent:
+                        notifi = notifications(notification=notification_msg, user_notification=user)
+                        db.session.add(notifi)
+                        db.session.commit()
+                        emit("friend-add", "Friend request sent!")
+                    else:
+                        emit("friend-add", "You have already sent the friend request")
                 else:
-                    emit("friend-add", "You have already sent the friend request")
+                    emit("friend-add", "The user already sent you a friend request. Check your notifications! prehaps refresh the page")
     if not found:
         emit("friend-add", "The user does not exist.")
 
@@ -362,7 +369,10 @@ def friend_request_handler(data):
                     db.session.add(new_friend_requester)
                     db.session.add(create_dm)
                     db.session.commit()
-                    emit("friend-request-handler", {"msg" : "The friend was added!", "notification": request_data, "type" : request_status, "name" : request_name})
+                    user_status = "offline"
+                    if(len(requester.active_sockets) > 0):
+                        user_status = "online"
+                    emit("friend-request-handler", {"msg" : "The friend was added!", "notification": request_data, "type" : request_status, "name" : request_name, "user status": user_status})
                     action = True
                     break
                 else:
@@ -482,7 +492,11 @@ def get_dm_data(room):
 @socketio.on("add-friend-requester-live") # adding the requester to the friend list live too.
 def add_friend_requester_live(data):
     print("checking if user is online")
-    emit("add-friend-requester-live",{"friend" : data["requester"], "accepted from" : data["accepted from"]},broadcast=True)
+    user_obj = users.query.filter_by(username=data["accepted from"]).first()
+    user_status = "offline"
+    if len(user_obj.active_sockets) > 0:
+        user_status = "online"
+    emit("add-friend-requester-live",{"friend" : data["requester"], "accepted from" : data["accepted from"], "user status" : user_status},broadcast=True)
 
 
 

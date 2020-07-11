@@ -380,7 +380,7 @@
         $("#notification-length").text(notifi_length - 1)
         if(data["type"] == "Accept"){ // could be if it's undefined I guess
         socket.emit("add-friend-requester-live", {"accepted from" : "{{username}}", "requester" : data["name"]})
-        addFriendToList(data["name"])
+        addFriendToList(data["name"], data["user status"])
         }
         toastr["success"](msg, msg)
         }
@@ -474,7 +474,7 @@
         console.log("add-friend-requester-live")
         if(data["friend"] == "{{username}}"){
         console.log(data["accepted from"])
-        addFriendToList(data["accepted from"]);
+        addFriendToList(data["accepted from"], data["user status"]);
         toastr["success"]("Your friend request was accepted from " + data["accepted from"], "Friend request")
         }
     });
@@ -517,18 +517,22 @@
     function checkifDM(){
     socket.emit("get-dm-data", room)
     }
-    function addFriendToList(friend_name){
+    function addFriendToList(friend_name, user_status){
     current_date_time = new Date();
     date =  current_date_time.getDate()+'/'+(current_date_time.getMonth()+1)+'/'+ current_date_time.getFullYear()
     time = current_date_time.getHours() + ":" + current_date_time.getMinutes();
     dateTime = ' ' + time + ' ' + date;
+    var color = "gray"
+    if(user_status == "online"){
+      color = "green"
+    }
     console.log(dateTime) // check if the user is online
         var create_msg = `
         <div id="friend-` +  friend_name + `">
         <li class="p-2">
             <a class="d-flex justify-content-between">
             <div class="text-small">
-                <i class="fa fa-circle" aria-hidden="true" style="color:gray"></i>
+                <i class="fa fa-circle user-status" aria-hidden="true" style="color:` + color + `"></i>
                 <button type="button" class="btn btn-primary friend-username">` + friend_name + `</button>
                 <p class="last-message text-muted"></p>
             </div>
