@@ -466,6 +466,7 @@ def test_disconnect():
 
 @socketio.on('connect')
 def test_disconnect():
+    """
     print(current_user.username)
     soc = request.sid
     if soc is not None:
@@ -475,6 +476,7 @@ def test_disconnect():
         current_sockets.append(soc)
         current_user.active_sockets = current_sockets
     print('Client connect')
+    """
 
 if __name__ == "__main__":
     socketio.run(app, debug=True)
