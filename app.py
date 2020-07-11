@@ -22,7 +22,7 @@ class users(db.Model, UserMixin):
     username = db.Column(db.TEXT)
     password = db.Column(db.TEXT)
     email = db.Column(db.TEXT)
-    active_sockets = db.Column(db.ARRAY(db.TEXT))
+    active_sockets = db.Column(db.ARRAY(db.TEXT), default=[""])
     notifications = db.relationship('notifications', backref='user_notification')
     friends = db.relationship('friends', backref='user_friends')
 
@@ -218,6 +218,7 @@ def handle_message(message):
             new_dm = dm_history(msg=last_message, msg_from_user=current_user.username, users_dms=friend_obj, msg_time=date)
             db.session.add(new_dm)
             db.session.commit()
+        print("No exception")
         send({"msg" : message["message"], "user" : current_user.username, "time" : date, "server" : "no"}, room=room)
     except:
         print(type(message)) # server message
@@ -408,8 +409,8 @@ def show_dm_history(friend_name):
 @socketio.on('get-dm-data')
 def get_dm_data(room):
     dm_obj = friends_dms.query.filter_by(room=room).first()
-    print(request.sid)
     if dm_obj is not None:
+        print(request.sid)
         now = datetime.datetime.now()
         date = now.strftime("%H:%M %d/%m/%Y") # no more seconds
         first_user = dm_obj.first_user
@@ -459,19 +460,20 @@ def on_leave(data):
 
 @socketio.on('disconnect')
 def test_disconnect():
-    print(current_user.username)
-    print(current_user.active_sockets)
+    #print(current_user.username)
+    #print(current_user.active_sockets)
     print('Client disconnected')
 
 @socketio.on('connect')
 def test_disconnect():
     print(current_user.username)
-    print(request.sid)
-    """
-    current_sockets = current_user.active_sockets
-    current_sockets.append(request.sid)
-    current_user.active_sockets = current_sockets
-    """
+    soc = request.sid
+    if soc is not None:
+        current_sockets = current_user.active_sockets
+        print(current_sockets)
+        print(soc)
+        current_sockets.append(soc)
+        current_user.active_sockets = current_sockets
     print('Client connect')
 
 if __name__ == "__main__":

@@ -103,7 +103,7 @@
                     <br>
                   <li class="white">
                     <div class="form-group basic-textarea">
-                      <input type="text" class="form-control pl-2 my-0" id="input" rows="3" placeholder="Type your message here..."></input>
+                      <input type="text" dir="auto" class="form-control pl-2 my-0" id="input" rows="3" placeholder="Type your message here..."></input>
                     </div>
                   </li>
                   <button type="button" class="btn btn-deep-purple btn-rounded btn-sm waves-effect waves-light float-right" id="send">Send</button>
@@ -219,10 +219,12 @@ toastr.options = {
         $(".dropdown-menu").append('<a class="dropdown-item this-is-navbar room">' + msg + '</a>')
         toastr["success"]("Your room has successfully created", "Room created")
         new_room = msg
+        toastr["success"]("You have joined" + new_room, "Room created")
         $(document).ready(function(){
           socket.emit('leave', {"room" : room})
           socket.emit("join", {"room" : new_room})
         });
+        room = new_room
         $("#modalAddRoom .close").click()
         $("#messages").html("");
       }
@@ -261,7 +263,6 @@ toastr.options = {
               else{
                 console.log("no password")
                 $("#messages").html("");
-                console.log("Joining a room")
                 socket.emit('leave', {"room" : room})
                 socket.emit("join", {"room" : new_room})
                 var room_msg = "You have joined " + new_room
@@ -440,6 +441,7 @@ toastr.options = {
         toastr["success"]("Going to the dm's", "dm")
         socket.emit('leave', {"room" : room, "dm" : "True"})
         socket.emit("join", {"room" : data, "dm" : "True"})
+        $("#messages").animate({ scrollTop: $('#messages').prop("scrollHeight")}, 500);
         room = data;
       }
     }); 
@@ -481,6 +483,7 @@ toastr.options = {
     var inp = $("#input").val();
     inp = htmlEntities(inp);
     socket.send({"message" : inp, "room" : room})
+    $("#messages").animate({ scrollTop: $('#messages').prop("scrollHeight")}, 500);
     checkifDM();
   }
   function checkifDM(){
