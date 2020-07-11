@@ -250,11 +250,11 @@ def room_add(data):
             add_new_room = all_rooms(rooms= room_name, room_password=room_password, room_owner= owner)
             db.session.add(add_new_room)
             db.session.commit()
-            emit("room-add", room_name) # send if the room is private or not
+            emit("room-add", {"msg" : "created!", "password" : room_password, "room" : room_name}) # send if the room is private or not
         else:
-            emit("room-add", "an unexpected error has occurred, please choose a different password") # send if the room is private or not
+            emit("room-add", {"msg" : "an unexpected error has occurred, please choose a different password"}) # send if the room is private or not
     else:
-        emit("room-add", "Room already exists")
+        emit("room-add", {"msg" : "Room already exists"})
 
 @socketio.on('join')
 def on_join(data):

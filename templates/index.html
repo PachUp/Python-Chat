@@ -208,17 +208,25 @@ toastr.options = {
                     </li>`
         $("#messages").append(create_msg)
     });
-    socket.on("room-add", function(msg){
-      if(msg == "an unexpected error has occurred, please choose a different password"){
-        toastr["error"](msg, "error")
+    socket.on("room-add", function(data){
+      if(data["msg"] == "an unexpected error has occurred, please choose a different password"){
+        toastr["error"](data["msg"], "error")
       }
-      if(msg == "Room already exists"){
+      else if(data["msg"] == "Room already exists"){
         toastr["error"]("it seems like the room already exists", "Can't create the room")
       }
       else{
-        $(".dropdown-menu").append('<a class="dropdown-item this-is-navbar room">' + msg + '</a>')
+        console.log(data["password"])
+        if(data["password"] == ""){
+          $(".public-dropdown").append('<a class="dropdown-item this-is-navbar room">' +data["room"] + '</a>')
+          $(".all-rooms-dropdown").append('<a class="dropdown-item this-is-navbar room">' +data["room"] + '</a>')
+        }
+        else{
+          $(".private-dropdown").append('<a class="dropdown-item this-is-navbar room">' +data["room"] + '</a>')
+          $(".all-rooms-dropdown").append('<a class="dropdown-item this-is-navbar room">' +data["room"] + '</a>')
+        }
         toastr["success"]("Your room has successfully created", "Room created")
-        new_room = msg
+        new_room = data["room"]
         toastr["success"]("You have joined" + new_room, "Room created")
         $(document).ready(function(){
           socket.emit('leave', {"room" : room})
