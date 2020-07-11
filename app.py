@@ -17,12 +17,14 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 server_rooms = ["Main", "Vanila", "Chocolate"] # need to be inside the db
 
+# TD: need to change databases names to the pip8 standards
+
 class users(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key = True)
     username = db.Column(db.TEXT)
     password = db.Column(db.TEXT)
     email = db.Column(db.TEXT)
-    active_sockets = db.Column(db.ARRAY(db.TEXT), default=[""])
+    active_sockets = db.relationship('activeSockets', backref='user_active_sockets')
     notifications = db.relationship('notifications', backref='user_notification')
     friends = db.relationship('friends', backref='user_friends')
 
@@ -39,6 +41,12 @@ class friends(db.Model):
     last_text_message = db.Column(db.TEXT, default="")
     last_message_time = db.Column(db.TEXT, default=datetime.datetime.now().strftime("%H:%M %d/%m/%Y")) # I am not using datetime because I need to return a string of the time anyway
     user_id = db.Column(db.Integer, db.ForeignKey('users.id')) 
+
+class activeSockets(db.Model):
+    id = db.Column(db.Integer, primary_key = True)
+    socket = db.Column(db.TEXT)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+
 
 class all_rooms(db.Model):
     id = db.Column(db.Integer, primary_key = True)
@@ -68,12 +76,16 @@ class dm_history(db.Model):
 @login_required
 def index():
     print("index")
+    for i in current_user.active_sockets:
+        print("current open sockets of the user: ", end="")
+        print(i.socket)
     rooms = all_rooms.query.all()
     notifi = []
     user_friends = []
     last_message_time_with_friends = []
     last_message = []
     public_rooms = []
+    online_users = []
     private_rooms = []
     for i in current_user.notifications:
         notifi.append(i.notification)
@@ -93,6 +105,12 @@ def index():
         user_friends.append(i.friend_name)
         last_message_time_with_friends.append(i.last_message_time)
         last_message.append(i.last_text_message)
+    all_users = users.query.all()
+    for i in all_users:
+        if(len(i.active_sockets) > 0):
+            online_users.append("online") # I can do that because in the html file I loop though all the users by the same order
+        else:
+            online_users.append("offline")
     total_rooms = ["Main", "Vanila", "Chocolate"]
     for i in rooms:
         total_rooms.append(i.rooms)
@@ -101,7 +119,7 @@ def index():
         else:
             private_rooms.append(i.rooms)
     print(server_rooms)
-    return render_template("index.html", all_rooms=total_rooms,server_rooms= server_rooms,private_rooms=private_rooms,public_rooms=public_rooms ,notifications=notifi, user_friends=user_friends, username=current_user.username, last_message_time_with_friends=last_message_time_with_friends, last_message=last_message)
+    return render_template("index.html", all_rooms=total_rooms,server_rooms= server_rooms,private_rooms=private_rooms,public_rooms=public_rooms ,notifications=notifi, user_friends=user_friends, username=current_user.username, last_message_time_with_friends=last_message_time_with_friends, last_message=last_message, online_users=online_users)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -193,33 +211,36 @@ def handle_message(message):
         print("In room")
         room=message["room"]
         print(message["room"])
-        friend_obj = friends_dms.query.filter_by(room=room).first()
+        friend_obj = friends_dms.query.filter_by(room=room).first()  
         print(friend_obj) # should be none if it doesn't find it
         if friend_obj is not None:
-            print("not none2")
-            print(message["message"])
-            last_message = message["message"]
-            friend = ""
-            you = ""
-            if friend_obj.first_user == current_user.username:
-                you = friend_obj.first_user
-                friend = friend_obj.second_user
-            else:
-                you = friend_obj.second_user
-                friend = friend_obj.first_user
-            print(you)
-            print(friend)
-            friends_obj = friends.query.filter_by(friend_name=friend, user_friends=current_user).first()
-            friend_obj_user = users.query.filter_by(username=friend).first()
-            your_obj = friends.query.filter_by(friend_name=current_user.username, user_friends=friend_obj_user).first()
-            your_obj.last_text_message = last_message
-            friends_obj.last_text_message = last_message
-            db.session.commit()
-            new_dm = dm_history(msg=last_message, msg_from_user=current_user.username, users_dms=friend_obj, msg_time=date)
-            db.session.add(new_dm)
-            db.session.commit()
-            print("No exception")
-            send({"msg" : message["message"], "user" : current_user.username, "time" : date, "server" : "no"}, room=room)
+            if current_user.username != friend_obj.first_user and current_user.username != friend_obj.second_user:
+               emit("friend-add", "an unexpected error has occurred") # I did friend-add because it will show that there was a problem in toastr. it will happen if the user inspected the elemet to a diffrent user
+            else: 
+                print("not none2")
+                print(message["message"])
+                last_message = message["message"]
+                friend = ""
+                you = ""
+                if friend_obj.first_user == current_user.username:
+                    you = friend_obj.first_user
+                    friend = friend_obj.second_user
+                else:
+                    you = friend_obj.second_user
+                    friend = friend_obj.first_user
+                print(you)
+                print(friend)
+                friends_obj = friends.query.filter_by(friend_name=friend, user_friends=current_user).first()
+                friend_obj_user = users.query.filter_by(username=friend).first()
+                your_obj = friends.query.filter_by(friend_name=current_user.username, user_friends=friend_obj_user).first()
+                your_obj.last_text_message = last_message
+                friends_obj.last_text_message = last_message
+                db.session.commit()
+                new_dm = dm_history(msg=last_message, msg_from_user=current_user.username, users_dms=friend_obj, msg_time=date)
+                db.session.add(new_dm)
+                db.session.commit()
+                print("No exception")
+                send({"msg" : message["message"], "user" : current_user.username, "time" : date, "server" : "no"}, room=room)
         else:
             send({"msg" : message["message"], "user" : current_user.username, "time" : date, "server" : "no"}, room=room)
     except:
@@ -475,23 +496,27 @@ def on_leave(data):
 
 @socketio.on('disconnect')
 def test_disconnect():
-    #print(current_user.username)
-    #print(current_user.active_sockets)
+    socket = request.sid
+    print("client dissconeted sid: " + socket)
+    if socket is not None:
+        activeSockets.query.filter_by(socket=socket).delete()
+        db.session.commit()
+        if(len(current_user.active_sockets) == 0):
+            emit("user-offline", {"username" : current_user.username}, broadcast=True)
     print('Client disconnected')
 
 @socketio.on('connect')
 def test_disconnect():
-    """
     print(current_user.username)
-    soc = request.sid
-    if soc is not None:
-        current_sockets = current_user.active_sockets
-        print(current_sockets)
-        print(soc)
-        current_sockets.append(soc)
-        current_user.active_sockets = current_sockets
+    socket = request.sid
+    if socket is not None:
+        print("client connected sid: " + socket)
+        socket_obj = activeSockets(user_active_sockets=current_user, socket=socket)
+        db.session.add(socket_obj)
+        db.session.commit()
+        if(len(current_user.active_sockets) == 0):
+            emit("user-online", {"username" : current_user.username}, broadcast=True)
     print('Client connect')
-    """
 
 if __name__ == "__main__":
     socketio.run(app, debug=True)
