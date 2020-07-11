@@ -70,7 +70,7 @@ class dm_history(db.Model):
     friends_dm_id = db.Column(db.Integer, db.ForeignKey('friends_dms.id')) 
 
 
-
+# TD : check if the user already recived the friend request so I need to not be able to let him send it
 
 @app.route("/", methods=["GET"])
 @login_required
@@ -110,8 +110,12 @@ def index():
         if i.username == current_user.username:
             continue
         if len(i.active_sockets) > 0:
+            print("online")
+            print(len(i.active_sockets))
             online_users.append("online") # I can do that because in the html file I loop though all the users by the same order
         else:
+            print("offline")
+            print(len(i.active_sockets))
             online_users.append("offline")
     total_rooms = ["Main", "Vanila", "Chocolate"]
     for i in rooms:

@@ -491,7 +491,7 @@
       console.log("Here2")
       $(".friend-username").each(function(i){
         console.log($(this).text())
-        if(data["username"] == $(this).text(i)){
+        if(data["username"] == $(this).text()){
           $(".user-status").eq(i).css({"color" : "gray"})
         }
       });
