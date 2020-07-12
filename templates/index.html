@@ -166,15 +166,15 @@
         "hideMethod": "fadeOut"
       }
     var room = "Main"
-    console.log("https://" + document.domain + ":" + location.port)
+    console.log("http://" + document.domain + ":" + location.port)
     console.log(typeof(location.port))
     /*
     if(location.port == ""){
         location.port = "80"
     }
     */
-    if (location.protocol !== "https:") {
-      location.protocol = "https:";
+    if (location.protocol !== "http:") {
+      location.protocol = "http:";
     }
     var socket = io("http://" + document.domain + ":" + location.port);
     socket.on('connect', function() {
