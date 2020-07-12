@@ -166,8 +166,6 @@
         "hideMethod": "fadeOut"
       }
     var room = "Main"
-    console.log("http://" + document.domain + ":" + location.port)
-    console.log(typeof(location.port))
     /*
     if(location.port == ""){
         location.port = "80"
@@ -185,7 +183,6 @@
         socket.emit("disconnect")
     });
     socket.on("message", function(obj){ // add connected handler
-        console.log(obj)
         if(obj["server"] != "yes"){
         msg = addNewlines(obj["msg"])
         username = obj["user"]
@@ -194,12 +191,8 @@
             msg = addNewlines(obj["msg"]) // not really needed but it's fine
             username = "Server"
         }
-        console.log("recived")
-        console.log(msg)
-        console.log(username)
         var entites = "";
         $(entites).html(msg)
-        console.log(entites)
         var create_msg = `<li class="d-flex justify-content-between mb-4">
                         <div class="chat-body white p-3 ml-2 z-depth-1">
                             <div class="header">
@@ -224,7 +217,6 @@
         toastr["error"]("it seems like the room already exists", "Can't create the room")
         }
         else{
-        console.log(data["password"])
         if(data["password"] == ""){
             $(".public-dropdown").append('<a class="dropdown-item this-is-navbar room">' +data["room"] + '</a>')
             $(".all-rooms-dropdown").append('<a class="dropdown-item this-is-navbar room">' +data["room"] + '</a>')
@@ -254,17 +246,14 @@
       }
     });
     $("#send").click(function(){
-        console.log("clicked")
         sendMessage()
         $("#input").val("")
     });
     var new_room = ""
     var room_pass = "" // randomize 
     $(".dropdown-menu").on('click', '.room', function(event){ // I have to use the .on method because .click doesn't work when data is appended
-        console.log("Room clicked") 
         new_room = $(event.target).text() // check if it exists in the database
-        event.preventDefault()
-        console.log(new_room);
+        event.preventDefault();
         if(room == new_room){
             toastr["error"]("You are already in the room", "Can't join the room")
         }
@@ -276,11 +265,9 @@
             success: function(pass){
                 room_pass = pass; // pass is the room password
                 if(pass != "False"){ 
-                    console.log("opening")
                     $("#password-validation").modal("toggle");
                 }
                 else{
-                console.log("no password")
                 $("#messages").html("");
                 socket.emit('leave', {"room" : room})
                 socket.emit("join", {"room" : new_room})
@@ -294,15 +281,11 @@
     });
     
     $("#room-password-btn").click(function(){
-        console.log("Execute")
         user_password = $("#room-password-val").val()
-        console.log(user_password)
-        console.log(room_pass)
         if(user_password == room_pass){
         $("#messages").html("");
         $("#password-validation .close").click()
         toastr["success"]("Entering you into the room!", "Corrent password")
-        console.log("Joining a room")
         socket.emit('leave', {"room" : room})
         socket.emit("join", {"room" : new_room})
         room = new_room
@@ -319,7 +302,6 @@
     $("#new-room").click(function(){
         var created_room = $("#new-room-input").val();
         $("#new-room-input").val("");
-        console.log($('#room-password-check').is(':checked'))
         if($('#room-password-check').is(':checked')){
         password = $("#room-password").val()
         } 
@@ -338,9 +320,7 @@
         $('#friend-username-val').trigger('focus');
     });
     $("#friend-btn").click(function(){
-        console.log("clicked")
         var input_username = $("#friend-username-val").val()
-        console.log(input_username)
         socket.emit("friend-add", {"username" : input_username})
     });
     socket.on("friend-add", function(msg){
@@ -356,26 +336,19 @@
         if(this.textContent == "Reject"){
         var index = $dropDownItems.index(this) - 1
         var text = $dropDownItems.eq(index).text()
-        console.log(index)
         for(var i = $dropDownItems.index(this) - 1; i <= $dropDownItems.index(this)+3; i++){
             $dropDownItems.eq(i).remove()
-            console.log( $dropDownItems.eq(i).text())
         }
         socket.emit("friend-request-handler", {"type" : "Reject", "notification" : text})
-        console.log(text)
         }
         else if(this.textContent == "Accept"){
         var index = $dropDownItems.index(this) - 3
         var text = $dropDownItems.eq(index).text()
-        console.log(index)
         for(var i = $dropDownItems.index(this) - 3; i <= $dropDownItems.index(this)+ 1; i++){
             $dropDownItems.eq(i).remove()
-            console.log( $dropDownItems.eq(i).text())
         }
-        console.log(text)
         socket.emit("friend-request-handler", {"type" : "Accept", "notification" : text})
         }
-        console.log('index: ', $dropDownItems.index(this), 'text: ', this.textContent)
     });
     socket.on("friend-request-handler", function(data){
         msg = data["msg"]
@@ -395,7 +368,6 @@
     });
     $(".friend-div").on('click', '.friend-username' , function(){
         var friend = $(this).text()
-        console.log(room)
         entered_room = room;
         socket.emit("friends-dm", friend)
         socket.emit("dm-history", friend)
@@ -407,8 +379,8 @@
         var sent_user = data["user"] // array
         var user_msg = data["msg"] // array same length
         var msg_time = data["time"] // array same length
-        console.log("in")
         if(entered_room != room){
+            $("#messages").html("")
             for(var i = 0; i<user_msg.length; i++){
             $("#messages").append(`
             <li class="d-flex justify-content-between mb-4">
@@ -425,8 +397,6 @@
             </li>
             `)
             }
-            console.log("in")
-            console.log( data["friend"])
             $('.friend-name > #' + data["friend"]).html(user_msg[user_msg.length - 1]);
         }
         }
@@ -449,23 +419,11 @@
         }
     }); 
     socket.on("get-dm-data", function(data){
-        console.log("recived")
         friend_name = data["friend"] // potentiality too.
         potentiality_other_friend = data["you"] // to the other user the user who sent the message is "you" and he is the friend
         date = data["date"]
         last_msg = data["last message"]
-        /*
-        console.log("dm data")
-        console.log("{{username}}")
-        console.log(data["friend"])
-        console.log(data["you"])
-        */
-        console.log("fr")
-        console.log(data["friend"])
-        console.log(data["you"])
-        console.log("{{username}}")
-        console.log("{{username}}" == data["friend"])
-        console.log("{{username}}" == data["you"])
+        last_msg = last_msg.replace("<br />", " ")
         if("{{username}}" == data["friend"]){ // I have to identify the user first. The user could just inspect the elements and he could see this info.
         $("#friend-" + potentiality_other_friend + " .date:first").html(date)
         $("#friend-" + potentiality_other_friend + " .last-message:first").html(last_msg)
@@ -476,26 +434,20 @@
         }
     });
     socket.on("add-friend-requester-live", function(data){
-        console.log("add-friend-requester-live")
         if(data["friend"] == "{{username}}"){
-        console.log(data["accepted from"])
         addFriendToList(data["accepted from"], data["user status"]);
         toastr["success"]("Your friend request was accepted from " + data["accepted from"], "Friend request")
         }
     });
     socket.on("user-online", function(data){
-      console.log("Here")
       $(".friend-username").each(function(i){
-        console.log($(this).text())
         if(data["username"] == $(this).text()){
           $(".user-status").eq(i).css({"color" : "green"})
         }
       });
     });
     socket.on("user-offline", function(data){
-      console.log("Here2")
       $(".friend-username").each(function(i){
-        console.log($(this).text())
         if(data["username"] == $(this).text()){
           $(".user-status").eq(i).css({"color" : "gray"})
         }
@@ -514,10 +466,8 @@
     }
     function sendMessage(){
     var inp = $("#input").val();
-    console.log(inp)
     inp = htmlEntities(inp);
     inp = inp.replace(new RegExp('\r?\n','g'), '<br />');
-    console.log(inp)
     socket.send({"message" : inp, "room" : room})
     $("#messages").animate({ scrollTop: $('#messages').prop("scrollHeight")}, 500);
     checkifDM();
@@ -534,7 +484,6 @@
     if(user_status == "online"){
       color = "green"
     }
-    console.log(dateTime) // check if the user is online
         var create_msg = `
         <div id="friend-` +  friend_name + `">
         <li class="p-2">
