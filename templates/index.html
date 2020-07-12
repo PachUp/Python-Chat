@@ -104,7 +104,7 @@
                     <br>
                   <li class="white">
                     <div class="form-group basic-textarea">
-                      <input type="text" dir="auto" class="form-control pl-2 my-0" id="input" rows="3" placeholder="Type your message here..."></input>
+                      <textarea type="text" name="input" dir="auto" class="form-control pl-2 my-0" id="input" placeholder="Type your message here..."></textarea>
                     </div>
                   </li>
                   <button type="button" class="btn btn-deep-purple btn-rounded btn-sm waves-effect waves-light float-right" id="send">Send</button>
@@ -243,10 +243,12 @@
         }
     });
     $("#input").keydown(function(e){
-        if(e.keyCode == 13){ // 13 is the enter key
+      if (e.keyCode == 13 && !e.shiftKey)
+      {
+        e.preventDefault();
         sendMessage()
         $("#input").val("")
-        }
+      }
     });
     $("#send").click(function(){
         console.log("clicked")
@@ -509,7 +511,10 @@
     }
     function sendMessage(){
     var inp = $("#input").val();
+    console.log(inp)
     inp = htmlEntities(inp);
+    inp = inp.replace(new RegExp('\r?\n','g'), '<br />');
+    console.log(inp)
     socket.send({"message" : inp, "room" : room})
     $("#messages").animate({ scrollTop: $('#messages').prop("scrollHeight")}, 500);
     checkifDM();

@@ -8,6 +8,8 @@ import datetime
 import secrets
 import os
 app = Flask(__name__)
+os.environ["SECRET_KEY_C"] = "scret"
+os.environ["HEROKU_POSTGRESQL_ONYX_URL"] = "postgres://plxtzpbchmwhzx:ff5342a18acdfbe0961cdbd25f547b401a3c80d9ec353f78ddfa741ff26f92a3@ec2-54-247-89-181.eu-west-1.compute.amazonaws.com:5432/ddp4kf6h0in1n"
 app.config['SECRET_KEY'] = os.environ["SECRET_KEY_C"]
 socketio = SocketIO(app,cors_allowed_origins=['http://chat-py.herokuapp.com', 'http://127.0.0.1:5000'])
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ["HEROKU_POSTGRESQL_ONYX_URL"]
@@ -18,7 +20,7 @@ login_manager.init_app(app)
 server_rooms = ["Main", "Vanila", "Chocolate"] # need to be inside the db
 
 # TD: need to change databases names to the pip8 standards
-
+ 
 class users(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key = True)
     username = db.Column(db.TEXT)
