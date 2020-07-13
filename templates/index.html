@@ -123,7 +123,7 @@
                     <li class="p-2">
                       <a class="d-flex justify-content-between">
                         <div class="text-small">
-                          {% if online_users[i] == "offline"%}
+                          {% if  user_friends[i] not in online_users %}
                             <i class="fa fa-circle user-status" aria-hidden="true" style="color:gray"></i>
                           {%else%}
                             <i class="fa fa-circle user-status" aria-hidden="true" style="color:green"></i>
