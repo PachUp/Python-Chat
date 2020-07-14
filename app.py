@@ -108,6 +108,7 @@ def index():
         last_message_time_with_friends.append(i.last_message_time)
         last_message.append(i.last_text_message)
     all_users = users.query.all()
+    all_friends = current_user.friends
     for i in all_users:
         if i.username == current_user.username:
             continue
@@ -405,7 +406,7 @@ def friends_dm(friend_username):
         if dm_obj != None:
             emit("friends-dm", dm_obj.room)
         else:
-            emit("friends-dm", "error") # problem, shouldn't happen because I am check if the friend exist before hand.
+            emit("friends-dm", "error")  
     else:
         emit("friends-dm", "Friend not found")
 

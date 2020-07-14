@@ -304,6 +304,7 @@
         $("#new-room-input").val("");
         if($('#room-password-check').is(':checked')){
         password = $("#room-password").val()
+        created_room = htmlEntities(created_room);
         } 
         else{
         password = ""
