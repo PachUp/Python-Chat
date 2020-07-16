@@ -36,12 +36,3 @@
     height: 200px;
     width: 400px;
   }
-  .icon-user {
-    position: absolute;
-    
-    background: red;
-    width: 16px;
-    height: 16px;
-    left: 6px;
-    bottom: 0px;
-  }

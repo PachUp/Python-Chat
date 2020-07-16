@@ -105,7 +105,6 @@
                   <li class="white">
                     <div class="form-group basic-textarea">
                       <textarea type="text" name="input" dir="auto" class="form-control pl-2 my-0" id="input" placeholder="Type your message here..."></textarea>
-                      <span class="icon-user"></span>
                     </div>
                   </li>
                   <button type="button" class="btn btn-deep-purple btn-rounded btn-sm waves-effect waves-light float-right" id="send">Send</button>
@@ -326,12 +325,17 @@
         var input_username = $("#friend-username-val").val()
         socket.emit("friend-add", {"username" : input_username})
     });
-    socket.on("friend-add", function(msg){
-        if(msg == "Friend request sent!"){
-        toastr["success"]("The friend request sent successfully!", msg)
+    socket.on("friend-add", function(data){
+        if(data["friend"] != undefined){
+          console.log(data)
+          msg = data["msg"] // if it sent the notification
+          friend_username = data["friend"]
+          console.log(friend_username)
+          socket.emit("send-notificaton-live", {"sender" : "{{username}}", "receiver" : friend_username})
+          toastr["success"]("The friend request sent successfully!", data)
         }
         else{
-        toastr["error"](msg, msg)
+          toastr["error"](data, data)
         }
     });
     var $dropDownItems = $('.notifi-drop').children();
@@ -443,6 +447,19 @@
         addFriendToList(data["accepted from"], data["user status"]);
         toastr["success"]("Your friend request was accepted from " + data["accepted from"], "Friend request")
         }
+    });
+    socket.on("send-notificaton-live", function(data){
+      if(data["receiver"] == "{{username}}"){
+        var msg = `
+        <a class="dropdown-item friend-name-{{username}}">` + data["sender"] + ` Has added you as a friend!</a>
+        <button type="button" class="btn btn-outline-danger friend-rejected">Reject</button>
+        <a>⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀</a>
+        <button type="button" class="btn btn-outline-success friend-accepted">Accept</button>
+        <hr>
+        `
+        $(".notifi-drop").append(msg)
+        toastr["success"]("You have a new notification!")
+      }
     });
     socket.on("user-online", function(data){
       $(".friend-username").each(function(i){
