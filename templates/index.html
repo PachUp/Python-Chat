@@ -338,8 +338,8 @@
           toastr["error"](data, data)
         }
     });
-    var $dropDownItems = $('.notifi-drop').children();
-    $dropDownItems.on('click', function() {
+      var $dropDownItems = $('.notifi-drop').children();
+      $dropDownItems.on('click', function() {
         if(this.textContent == "Reject"){
         var index = $dropDownItems.index(this) - 1
         var text = $dropDownItems.eq(index).text()
@@ -443,6 +443,7 @@
         }
     });
     socket.on("add-friend-requester-live", function(data){
+      console.log("ddd")
         if(data["friend"] == "{{username}}"){
         addFriendToList(data["accepted from"], data["user status"]);
         toastr["success"]("Your friend request was accepted from " + data["accepted from"], "Friend request")
@@ -450,15 +451,7 @@
     });
     socket.on("send-notificaton-live", function(data){
       if(data["receiver"] == "{{username}}"){
-        var msg = `
-        <a class="dropdown-item friend-name-{{username}}">` + data["sender"] + ` Has added you as a friend!</a>
-        <button type="button" class="btn btn-outline-danger friend-rejected">Reject</button>
-        <a>⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀</a>
-        <button type="button" class="btn btn-outline-success friend-accepted">Accept</button>
-        <hr>
-        `
-        $(".notifi-drop").append(msg)
-        toastr["success"]("You have a new notification!")
+        toastr["success"]("Notification: " + data["sender"] + " Has send you a friend request!", "You have a new notification! Please refresh the page!")
       }
     });
     socket.on("user-online", function(data){
