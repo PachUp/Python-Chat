@@ -265,7 +265,6 @@ def handle_message(message):
 def room_add(data):
     print("adding")
     room_name = data["name"]
-    room_name = room_name.encode('ascii', 'xmlcharrefreplace') #html enittes
     room_exist = False
     room_name_compare = room_name.lower()
     if room_name_compare == "main" or room_name_compare == "vanila" or room_name_compare == "chocolate":
