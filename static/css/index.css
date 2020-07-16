@@ -26,3 +26,22 @@
     border-radius: 10px;
     background-color: #D62929;
 }
+.form-group {
+    position: relative;  
+    height: 200px;
+    width: 400px;
+  }
+  
+  #input {
+    height: 200px;
+    width: 400px;
+  }
+  .icon-user {
+    position: absolute;
+    
+    background: red;
+    width: 16px;
+    height: 16px;
+    left: 6px;
+    bottom: 0px;
+  }

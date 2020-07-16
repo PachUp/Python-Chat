@@ -105,6 +105,7 @@
                   <li class="white">
                     <div class="form-group basic-textarea">
                       <textarea type="text" name="input" dir="auto" class="form-control pl-2 my-0" id="input" placeholder="Type your message here..."></textarea>
+                      <span class="icon-user"></span>
                     </div>
                   </li>
                   <button type="button" class="btn btn-deep-purple btn-rounded btn-sm waves-effect waves-light float-right" id="send">Send</button>
@@ -426,10 +427,12 @@
         last_msg = data["last message"]
         last_msg = last_msg.replace("<br />", " ")
         if("{{username}}" == data["friend"]){ // I have to identify the user first. The user could just inspect the elements and he could see this info.
+        //socket.emit("count-unread-messages", {"receiver" : potentiality_other_friend, "sender" : friend_name})
         $("#friend-" + potentiality_other_friend + " .date:first").html(date)
         $("#friend-" + potentiality_other_friend + " .last-message:first").html(last_msg)
         }
         else if("{{username}}" == data["you"]){
+          //socket.emit("count-unread-messages", {"receiver" : friend_name, "sender" : potentiality_other_friend})
         $("#friend-" + friend_name + " .date:first").html(date)
         $("#friend-" + friend_name + " .last-message:first").html(last_msg)
         }

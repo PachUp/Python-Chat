@@ -8,11 +8,9 @@ import datetime
 import secrets
 import os
 app = Flask(__name__)
-os.environ["SECRET_KEY_C"] = "df"
-os.environ["HEROKU_POSTGRESQL_ONYX_URL"] = "postgres://plxtzpbchmwhzx:ff5342a18acdfbe0961cdbd25f547b401a3c80d9ec353f78ddfa741ff26f92a3@ec2-54-247-89-181.eu-west-1.compute.amazonaws.com:5432/ddp4kf6h0in1n"
 app.config['SECRET_KEY'] = os.environ["SECRET_KEY_C"]
 socketio = SocketIO(app,cors_allowed_origins=['http://chat-py.herokuapp.com', 'http://127.0.0.1:5000'])
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ["HEROKU_POSTGRESQL_ONYX_URL"]
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ["HEROKU_POSTGRESQL_NAVY_URL"]
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 login_manager = LoginManager()
@@ -61,6 +59,8 @@ class friends_dms(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     first_user = db.Column(db.TEXT)
     second_user = db.Column(db.TEXT)
+    first_user_unread_messages = db.Column(db.Integer)
+    second_user_unread_messages = db.Column(db.Integer)
     room = db.Column(db.TEXT)
     history = db.relationship('dm_history', backref='users_dms')
 
@@ -107,20 +107,21 @@ def index():
         user_friends.append(i.friend_name)
         last_message_time_with_friends.append(i.last_message_time)
         last_message.append(i.last_text_message)
-    all_users = users.query.all()
-    all_friends = current_user.friends
-    for i in all_users:
-        if i.username == current_user.username:
-            continue
-        if len(i.active_sockets) > 0:
-            print("online")
-            print(i.username)
-            print(len(i.active_sockets))
-            online_users.append(i.username) # I can do that because in the html file I loop though all the users by the same order
-        else:
-            print("offline")
-            print(len(i.active_sockets))
-            online_users.append("offline")
+    # seprated loops so it'll be easier to see what is going on
+    for i in current_user.friends:
+        friend_obj_user = users.query.filter_by(username=i.friend_name).first()
+        if friend_obj_user is not None:
+            if friend_obj_user.username == current_user.username:
+                continue
+            if len(friend_obj_user.active_sockets) > 0:
+                print("online")
+                print(friend_obj_user.username)
+                print(len(friend_obj_user.active_sockets))
+                online_users.append(friend_obj_user.username) # I can do that because in the html file I loop though all the users by the same order
+            else:
+                print("offline")
+                print(len(friend_obj_user.active_sockets))
+                online_users.append("offline")
     total_rooms = ["Main", "Vanila", "Chocolate"]
     for i in rooms:
         total_rooms.append(i.rooms)
@@ -502,8 +503,14 @@ def add_friend_requester_live(data):
         user_status = "online"
     emit("add-friend-requester-live",{"friend" : data["requester"], "accepted from" : data["accepted from"], "user status" : user_status},broadcast=True)
 
-
-
+"""
+@socketio.on("count-unread-messages")
+def count_dm_unread_messages(data):
+    receiver = data["receiver"]
+    print(receiver)
+    receiver_obj = users.query.filter_by(username=receiver).first()
+    for i in
+"""
 @socketio.on('leave')
 def on_leave(data):
     #username = data['username']
