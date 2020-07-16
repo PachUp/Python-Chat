@@ -219,6 +219,7 @@
         }
         else{
         if(data["password"] == ""){
+            data["room"] = htmlEntities(data["room"])
             $(".public-dropdown").append('<a class="dropdown-item this-is-navbar room">' +data["room"] + '</a>')
             $(".all-rooms-dropdown").append('<a class="dropdown-item this-is-navbar room">' +data["room"] + '</a>')
         }

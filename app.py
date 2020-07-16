@@ -8,6 +8,8 @@ import datetime
 import secrets
 import os
 app = Flask(__name__)
+os.environ["SECRET_KEY_C"] = "df"
+os.environ["HEROKU_POSTGRESQL_NAVY_URL"] = "postgres://xmlurgplxujzuf:f31614eadb562945bbd62d079a790f039f2976b7b40d56dfff59b4c7b7250908@ec2-54-217-204-34.eu-west-1.compute.amazonaws.com:5432/d7elamn746202b"
 app.config['SECRET_KEY'] = os.environ["SECRET_KEY_C"]
 socketio = SocketIO(app,cors_allowed_origins=['http://chat-py.herokuapp.com', 'http://127.0.0.1:5000'])
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ["HEROKU_POSTGRESQL_NAVY_URL"]
@@ -263,6 +265,7 @@ def handle_message(message):
 def room_add(data):
     print("adding")
     room_name = data["name"]
+    room_name = room_name.encode('ascii', 'xmlcharrefreplace') #html enittes
     room_exist = False
     room_name_compare = room_name.lower()
     if room_name_compare == "main" or room_name_compare == "vanila" or room_name_compare == "chocolate":
