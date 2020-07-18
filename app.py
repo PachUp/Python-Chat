@@ -8,8 +8,6 @@ import datetime
 import secrets
 import os
 app = Flask(__name__)
-os.environ["SECRET_KEY_C"] = "df"	
-os.environ["HEROKU_POSTGRESQL_ROSE_URL"] = "postgres://idykbjczdffptr:205902e4eaaa2bf6e04fbd455bb91636b0fa8ce51ef93920f362a2ca359cc29c@ec2-54-247-79-178.eu-west-1.compute.amazonaws.com:5432/d1q840ak325i6c"
 app.config['SECRET_KEY'] = os.environ["SECRET_KEY_C"]
 socketio = SocketIO(app,cors_allowed_origins=['http://chat-py.herokuapp.com', 'http://127.0.0.1:5000'])
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ["HEROKU_POSTGRESQL_ROSE_URL"]
