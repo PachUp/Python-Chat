@@ -518,7 +518,6 @@ def send_notificaton_live(data):
 
 @socketio.on('user-typing')
 def user_typing(data):
-    print("called")
     emit("user-typing", {"typing" : data["typing"], "user" : data["user"]}, room=data["room"])
 
 @socketio.on('leave')

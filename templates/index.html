@@ -97,7 +97,6 @@
             <div class="col-md-6 col-xl-8 pr-md-4 px-lg-auto px-0">
               <div class="col-md-3 typing">
                 <p>Typing: </p>
-
               </div>
               <div class="chat-message">
                 
@@ -505,7 +504,7 @@
       else{
         var ty = $(".typing").text()
         console.log(ty)
-        ty = ty.replace(data["user"] + " ", "")
+        ty = ty.replace(data["user"] + "⠀", "")
         $(".typing").text(ty)
       }
     });
