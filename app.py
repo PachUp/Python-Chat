@@ -518,6 +518,7 @@ def send_notificaton_live(data):
 
 @socketio.on('user-typing')
 def user_typing(data):
+    print("called")
     emit("user-typing", {"typing" : data["typing"], "user" : data["user"]}, room=data["room"])
 
 @socketio.on('leave')
@@ -532,6 +533,7 @@ def on_leave(data):
         pass
     room = data['room']
     leave_room(room)
+
     send({"msg" : current_user.username + ' has left the conversation', "server" : "yes", "time" : date} , room=room)
     
 @socketio.on('disconnect')

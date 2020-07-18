@@ -169,6 +169,7 @@
         "hideMethod": "fadeOut"
       }
     var room = "Main"
+    var typing = false;
     /*
     if(location.port == ""){
         location.port = "80"
@@ -235,6 +236,7 @@
         $(document).ready(function(){
             socket.emit('leave', {"room" : room})
             socket.emit("join", {"room" : new_room})
+            stoppedTyping();
         });
         room = new_room
         $("#modalAddRoom .close").click()
@@ -247,11 +249,13 @@
         e.preventDefault();
         sendMessage()
         $("#input").val("")
+        stoppedTyping();
       }
     });
     $("#send").click(function(){
         sendMessage()
         $("#input").val("")
+        stoppedTyping();
     });
     var new_room = ""
     var room_pass = "" // randomize 
@@ -275,6 +279,7 @@
                 $("#messages").html("");
                 socket.emit('leave', {"room" : room})
                 socket.emit("join", {"room" : new_room})
+                stoppedTyping();
                 var room_msg = "You have joined " + new_room
                 toastr["success"](room_msg, "Room joined")
                 room = new_room
@@ -292,6 +297,7 @@
         toastr["success"]("Entering you into the room!", "Corrent password")
         socket.emit('leave', {"room" : room})
         socket.emit("join", {"room" : new_room})
+        stoppedTyping();
         room = new_room
         }
         else{
@@ -425,6 +431,7 @@
         socket.emit('leave', {"room" : room, "dm" : "True"})
         socket.emit("join", {"room" : data, "dm" : "True"})
         $("#messages").animate({ scrollTop: $('#messages').prop("scrollHeight")}, 500);
+        stoppedTyping();
         room = data;
         }
     }); 
@@ -472,10 +479,9 @@
       });
     });
     var typingTimer;
-    var typing = false;
     $('#input').keyup(function(){
         if(!typing){
-          socket.emit("user-typing", {"typing" : "True", "user" : "{{username}}", "room" : room}) // user in the backend and the user in the frontend obs, not necessary the same one
+          socket.emit("user-typing", {"typing" : "True", "user" : "{{username}}", "room" : room})
         }
         typing = true;
         clearTimeout(typingTimer);
@@ -484,22 +490,22 @@
             typingTimer = setTimeout(stoppedTyping, 5000);
         }
         else{
-          socket.emit("user-typing", {"typing" : "False", "user" : "{{username}}", "room" : room})
+          stoppedTyping();
         }
     });
-    function stoppedTyping () {
+    function stoppedTyping() {
         typing = false;
         socket.emit("user-typing", {"typing" : "False", "user" : "{{username}}", "room" : room})
         console.log("stopped")
     }
     socket.on("user-typing", function(data){
       if(data["typing"] == "True"){
-        $(".typing").append(data["user"])
+        $(".typing").append(data["user"] + "⠀")
       }
       else{
         var ty = $(".typing").text()
         console.log(ty)
-        ty = ty.replace(data["user"], "")
+        ty = ty.replace(data["user"] + " ", "")
         $(".typing").text(ty)
       }
     });
