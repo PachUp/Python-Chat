@@ -184,6 +184,7 @@
     });
     socket.on('disconnect', function(){
         socket.emit("disconnect")
+        stoppedTyping();
     });
     socket.on("message", function(obj){ // add connected handler
         if(obj["server"] != "yes"){
