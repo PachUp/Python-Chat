@@ -524,6 +524,7 @@
     var inp = $("#input").val();
     inp = htmlEntities(inp);
     inp = inp.replace(new RegExp('\r?\n','g'), '<br />');
+    inp = inp.replace(/((http(s)?(\:\/\/))?(www\.)?([\w\-\.\/])*(\.[a-zA-Z]{2,3}\/?))(?!(.*a>)|(\'|\"))/g, '<a href="$1">$1</a>'); //convert to an actual url
     socket.send({"message" : inp, "room" : room})
     $("#messages").animate({ scrollTop: $('#messages').prop("scrollHeight")}, 500);
     checkifDM();
