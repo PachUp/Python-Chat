@@ -95,7 +95,10 @@
         <div class="card-body">
           <div class="row px-2">
             <div class="col-md-6 col-xl-8 pr-md-4 px-lg-auto px-0">
-      
+              <div class="col-md-3 typing">
+                <p>Typing: </p>
+
+              </div>
               <div class="chat-message">
                 
                 <ul class="list-unstyled chat">
@@ -467,6 +470,38 @@
           $(".user-status").eq(i).css({"color" : "gray"})
         }
       });
+    });
+    var typingTimer;
+    var typing = false;
+    $('#input').keyup(function(){
+        if(!typing){
+          socket.emit("user-typing", {"typing" : "True", "user" : "{{username}}", "room" : room}) // user in the backend and the user in the frontend obs, not necessary the same one
+        }
+        typing = true;
+        clearTimeout(typingTimer);
+        if ($('#input').val()) {
+            console.log("typing")
+            typingTimer = setTimeout(stoppedTyping, 5000);
+        }
+        else{
+          socket.emit("user-typing", {"typing" : "False", "user" : "{{username}}", "room" : room})
+        }
+    });
+    function stoppedTyping () {
+        typing = false;
+        socket.emit("user-typing", {"typing" : "False", "user" : "{{username}}", "room" : room})
+        console.log("stopped")
+    }
+    socket.on("user-typing", function(data){
+      if(data["typing"] == "True"){
+        $(".typing").append(data["user"])
+      }
+      else{
+        var ty = $(".typing").text()
+        console.log(ty)
+        ty = ty.replace(data["user"], "")
+        $(".typing").text(ty)
+      }
     });
     function addNewlines(str) {
     var result = '';

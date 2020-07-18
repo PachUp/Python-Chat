@@ -8,6 +8,8 @@ import datetime
 import secrets
 import os
 app = Flask(__name__)
+os.environ["SECRET_KEY_C"] = "df"	
+os.environ["HEROKU_POSTGRESQL_ROSE_URL"] = "postgres://idykbjczdffptr:205902e4eaaa2bf6e04fbd455bb91636b0fa8ce51ef93920f362a2ca359cc29c@ec2-54-247-79-178.eu-west-1.compute.amazonaws.com:5432/d1q840ak325i6c"
 app.config['SECRET_KEY'] = os.environ["SECRET_KEY_C"]
 socketio = SocketIO(app,cors_allowed_origins=['http://chat-py.herokuapp.com', 'http://127.0.0.1:5000'])
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ["HEROKU_POSTGRESQL_ROSE_URL"]
@@ -306,7 +308,7 @@ def on_join(data):
         send({"msg" : current_user.username +' has entered the dm', "server" : "yes", "time" : date}, room=room)
     else:
         send({"msg" : current_user.username +' has entered ' + room, "server" : "yes", "time" : date}, room=room)
-
+    
 @socketio.on('friend-add')
 def friend_add(data):
     friend_username = data["username"]
@@ -514,6 +516,9 @@ def send_notificaton_live(data):
         for i in user_obj.active_sockets:
             emit("send-notificaton-live",{"receiver" : data["receiver"], "sender" : data["sender"], "user status" : user_status},room=i.socket)
 
+@socketio.on('user-typing')
+def user_typing(data):
+    emit("user-typing", {"typing" : data["typing"], "user" : data["user"]}, room=data["room"])
 
 @socketio.on('leave')
 def on_leave(data):
@@ -528,7 +533,7 @@ def on_leave(data):
     room = data['room']
     leave_room(room)
     send({"msg" : current_user.username + ' has left the conversation', "server" : "yes", "time" : date} , room=room)
-
+    
 @socketio.on('disconnect')
 def test_disconnect():
     socket = request.sid
@@ -546,7 +551,7 @@ def test_disconnect():
     socket = request.sid
     if socket is not None:
         print("client connected sid: " + socket)
-        if(len(current_user.active_sockets) == 0):
+        if(len(current_user.active_sockets) == 0): # to check if even needed
             emit("user-online", {"username" : current_user.username}, broadcast=True)
         socket_obj = activeSockets(user_active_sockets=current_user, socket=socket)
         db.session.add(socket_obj)
