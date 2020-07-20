@@ -7,10 +7,11 @@ from hashlib import md5
 import datetime
 import secrets
 import os
+import html
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ["SECRET_KEY_C"]
 socketio = SocketIO(app,cors_allowed_origins=['http://chat-py.herokuapp.com', 'http://127.0.0.1:5000'])
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ["HEROKU_POSTGRESQL_ROSE_URL"]
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ["HEROKU_POSTGRESQL_ORANGE_URL"]
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 login_manager = LoginManager()
@@ -263,6 +264,8 @@ def handle_message(message):
 def room_add(data):
     print("adding")
     room_name = data["name"]
+    room_name = html.escape(room_name)
+    print(room_name)
     room_exist = False
     room_name_compare = room_name.lower()
     if room_name_compare == "main" or room_name_compare == "vanila" or room_name_compare == "chocolate":
@@ -271,6 +274,8 @@ def room_add(data):
     for i in rooms_obj:
         if i.rooms.lower() == room_name_compare:
             room_exist = True
+    
+    print(room_name)
     if room_exist is False:
         print("adding a room")
         owner = current_user.username
