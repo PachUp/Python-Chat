@@ -1,7 +1,7 @@
 ﻿# Python-Chat
 
 side note:
-most of the javascript is in the index.html. The reason there is no index.js is because of jinja2 - it doesn't work with .js type files. So the javascript of index.html must be inside index.html.
+most of the javascript is in the index.html. The reason is because jinja2 doesn't support .js type files. So the javascript of index.html must be inside the same html file.
 
  ---
 ## to run in localhost 
