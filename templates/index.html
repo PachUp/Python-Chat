@@ -183,8 +183,8 @@
         socket.emit("join", {"room" : "Main"})
     });
     socket.on('disconnect', function(){
-        socket.emit("disconnect")
         stoppedTyping();
+        socket.emit("disconnect")
     });
     socket.on("message", function(obj){ // add connected handler
         if(obj["server"] != "yes"){
