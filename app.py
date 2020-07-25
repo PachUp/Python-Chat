@@ -9,8 +9,6 @@ import secrets
 import os
 import html
 app = Flask(__name__)
-os.environ["HEROKU_POSTGRESQL_GREEN_URL"] = "postgres://rdavrnegswbzwe:277a49b5255a5613233fe1f6ea3b9b83dad803995b0efa03576fa67e5f843121@ec2-54-247-169-129.eu-west-1.compute.amazonaws.com:5432/dfhbtiqk1hk538"
-os.environ["SECRET_KEY_C"] = "kkk"
 app.config['SECRET_KEY'] = os.environ["SECRET_KEY_C"]
 socketio = SocketIO(app,cors_allowed_origins=['http://chat-py.herokuapp.com', 'http://127.0.0.1:5000'])
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ["HEROKU_POSTGRESQL_GREEN_URL"]
@@ -215,6 +213,7 @@ def register():
             return render_template('/register.html')
 
 all_msgs_in_room = {} #this is to check if the quoted message exists because all of the main rooms doesn't have any histroy I can check on.
+all_msgs_in_room["everyone"] = []
 @socketio.on('message')
 def handle_message(message):
     #new_msg = AllHistory(message=message)
@@ -231,11 +230,11 @@ def handle_message(message):
         msg_njson = message["message"]
         msg_in_room = all_msgs_in_room[room]
         msg_in_room.append(msg_njson)
-        all_msgs.append(msg_njson)
-        print( msg_njson.endswith("[/QUOTE]"))
         print(msg_njson.startswith("[QUOTE "))
+        print(msg_in_room)
         if(msg_njson.startswith("[QUOTE ")):
-            message["message"] = message_quote(msg_njson, all_msgs, msg_in_room)
+            print("pre quote")
+            message["message"] = message_quote(msg_njson, msg_in_room)
         if friend_obj is not None:
             if current_user.username != friend_obj.first_user and current_user.username != friend_obj.second_user:
                emit("friend-add", "an unexpected error has occurred") # I did friend-add because it will show that there was a problem in toastr. it will happen if the user inspected the elemet to a diffrent user
@@ -266,13 +265,15 @@ def handle_message(message):
                 send({"msg" : message["message"], "user" : current_user.username, "time" : date, "server" : "no"}, room=room)
         else:
             send({"msg" : message["message"], "user" : current_user.username, "time" : date, "server" : "no"}, room=room)
-    except:
+    except Exception as e:
+        print(e)
         print(type(message)) # server message
         if message == "Connected!":
-            all_msgs.append(current_user.username +" Has " + message)
+            msg_in_room = all_msgs_in_room["everyone"]
+            msg_in_room.append(current_user.username +" Has " + message)
             send({"msg" : current_user.username +" Has " + message, "time" : date, "server" : "yes"})
 
-def message_quote(message_with_quote, all_msgs, msg_in_room):
+def message_quote(message_with_quote, msg_in_room):
     print("quote")
     message = message_with_quote
     message = message.split("[QUOTE ", 1)[1]
@@ -288,7 +289,9 @@ def message_quote(message_with_quote, all_msgs, msg_in_room):
             quote_msg = message.split("]", 1)[1]
             actual_message = message_with_quote.split("[/QUOTE]", 1)[1]
             quote_msg = quote_msg.replace("<br />", "", 1)
-            if quote_msg.strip() in msg_in_room:    
+            print(all_msgs_in_room["everyone"])
+            print(msg_in_room)
+            if quote_msg.strip() in msg_in_room or quote_msg.strip() in all_msgs_in_room["everyone"]:    
                 new_msg = '<footer class="blockquote-footer"><cite title="Source Title">By ' + user +': </cite>' + quote_msg +'</footer>' + actual_message
                 print(new_msg)
                 return new_msg
