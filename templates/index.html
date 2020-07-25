@@ -199,14 +199,16 @@
                         <div class="chat-body white p-3 ml-2 z-depth-1">
                             <div class="header">
                                 <strong class="primary-font">`+ username +`</strong>
-                                <small class="pull-right text-muted"><i class="far fa-clock"></i>` + obj["time"] + `</small>
+                                <small class="text-muted"><i class="far fa-clock"></i>` + obj["time"] + `</small>
+                                <div class="dropdown">
+                                  <p class="pull-right fa fa-ellipsis-v" aria-hidden="true" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></p>
+                                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                      <a class="dropdown-item message-quote" user="`+ username +`" message="` + msg +`">Quote ` +  username + `</a>
+                                    </div>
+                                </div>
                             </div>
                             <hr class="w-100">
-                            <p id="new-msg">` + 
-                                msg
-                                +
-                                `
-                            </p>
+                            <p id="new-msg">` +  msg + `</p>
                         </div>
                     </li>`
         $("#messages").append(create_msg)
@@ -380,6 +382,18 @@
         toastr["error"]("There was a problem. Please try again.", msg)
         }
     });
+    $(document).on('click', ".message-quote", function(){
+      console.log("clicked")
+      console.log($(this).attr("message"))
+      console.log($(this).text())
+      if($(this).attr("message") == "<footer class="){
+        toastr["error"]("You can quote a quoted message","Can't quote")
+        $("#input").val('')
+      }
+      else{
+        $("#input").val('[QUOTE user=' + $(this).attr("user") +']' +  $(this).attr("message") + '[/QUOTE]')
+      }
+    });
     $(".friend-div").on('click', '.friend-username' , function(){
         var friend = $(this).text()
         entered_room = room;
@@ -399,14 +413,18 @@
             $("#messages").append(`
             <li class="d-flex justify-content-between mb-4">
                 <div class="chat-body white p-3 ml-2 z-depth-1">
-                <div class="header">
+                  <div class="header">
                     <strong class="primary-font">` + sent_user[i] +`</strong>
-                    <small class="pull-right text-muted"><i class="far fa-clock"></i>` + msg_time[i] + `</small>
-                </div>
+                    <small class="text-muted"><i class="far fa-clock"></i>` + msg_time[i] + `</small>
+                    <div class="dropdown">
+                      <p class="pull-right fa fa-ellipsis-v" aria-hidden="true" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></p>
+                        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                          <a class="dropdown-item message-quote" user="`+ sent_user[i] +`" message="` + user_msg[i] +`">Quote ` + sent_user[i] +`</a>
+                        </div>
+                    </div>
+                  </div>
                     <hr class="w-100">
-                    <p>`
-                    + user_msg[i] +
-                    `</p>
+                    <p>`+ user_msg[i] + `</p>
                 </div>
             </li>
             `)
