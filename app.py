@@ -92,8 +92,8 @@ def index():
     private_rooms = []
     for i in current_user.notifications:
         notifi.append(i.notification)
-    friends_obj_o_1 = friendsDms.query.filter_by(first_user=current_user.username).first()
-    friends_obj_o_2 = friendsDms.query.filter_by(second_user=current_user.username).first()
+    friends_obj_o_1 = friendsdms.query.filter_by(first_user=current_user.username).first()
+    friends_obj_o_2 = friendsdms.query.filter_by(second_user=current_user.username).first()
     """
     if friends_obj_o_1 is not None:
         for i in range(len(friends_obj_o_1.history)):
@@ -224,7 +224,7 @@ def handle_message(message):
         print("In room")
         room=message["room"]
         print(message["room"])
-        friend_obj = friendsDms.query.filter_by(room=room).first()  
+        friend_obj = friendsdms.query.filter_by(room=room).first()  
         print(friend_obj) # should be none if it doesn't find it
         print(message)
         msg_njson = message["message"]
@@ -319,7 +319,7 @@ def room_add(data):
         room_password = data["room password"] # None for now
         print(room_password)
         password_is_dm = False
-        for i in friendsDms.query.all():
+        for i in friendsdms.query.all():
             if room_password == i.room:
                 password_is_dm = True
         if not password_is_dm:
@@ -413,7 +413,7 @@ def friend_request_handler(data):
                     hash_salt = secrets.token_hex(6) # bascily creates 6 random chars and combines them to a string
                     room_hash = md5(str(current_user.username + requester.username + str(datetime.datetime.now()) + hash_salt).encode('utf-8')).hexdigest() # hashing MD5 with salt 
                     print(room_hash)
-                    create_dm = friendsDms(first_user=current_user.username, second_user=requester.username,room=room_hash)
+                    create_dm = friendsdms(first_user=current_user.username, second_user=requester.username,room=room_hash)
                     notifications.query.filter_by(notification=request_data, user_id=current_user.id).delete()
                     db.session.add(new_friend)
                     db.session.add(new_friend_requester)
@@ -446,9 +446,9 @@ def friends_dm(friend_username):
         if i.friend_name == friend_username:
             exist = True
     if exist:
-        dm_obj = friendsDms.query.filter_by(first_user=current_user.username, second_user=friend_username).first()
+        dm_obj = friendsdms.query.filter_by(first_user=current_user.username, second_user=friend_username).first()
         if dm_obj == None: #could be that the requester is trying to access the dm
-            dm_obj = friendsDms.query.filter_by(first_user=friend_username, second_user=current_user.username).first()
+            dm_obj = friendsdms.query.filter_by(first_user=friend_username, second_user=current_user.username).first()
         if dm_obj != None:
             emit("friends-dm", dm_obj.room)
         else:
@@ -480,9 +480,9 @@ def validate_room_password():
 
 @socketio.on("dm-history")
 def show_dm_history(friend_name):
-    dm_obj =  friendsDms.query.filter_by(first_user = current_user.username, second_user=friend_name).first()
+    dm_obj =  friendsdms.query.filter_by(first_user = current_user.username, second_user=friend_name).first()
     if dm_obj is None:
-        dm_obj =  friendsDms.query.filter_by(first_user = friend_name, second_user=current_user.username).first()
+        dm_obj =  friendsdms.query.filter_by(first_user = friend_name, second_user=current_user.username).first()
     if dm_obj is None:
         emit("dm-history", "the dm was not found in the db")
     else:
@@ -503,9 +503,9 @@ def show_dm_history(friend_name):
 
 @socketio.on('get-dm-data')
 def get_dm_data(room):
-    dm_obj = friendsDms.query.filter_by(room=room).first()
+    dm_obj = friendsdms.query.filter_by(room=room).first()
     if dm_obj is not None:
-        print(request.sid)
+        print(request.sid) 
         now = datetime.datetime.now()
         date = now.strftime("%H:%M %d/%m/%Y") # no more seconds
         first_user = dm_obj.first_user
