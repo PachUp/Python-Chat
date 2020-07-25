@@ -9,9 +9,11 @@ import secrets
 import os
 import html
 app = Flask(__name__)
+os.environ["HEROKU_POSTGRESQL_WHITE_URL"] = "postgres://ojtvxaxmhxuomx:b81aea6c5808fceb7ada8f37ce620469e8c4376e1c9eb80602ca3855e8c328a3@ec2-54-247-103-43.eu-west-1.compute.amazonaws.com:5432/d2cnllir01pqij"
+os.environ["SECRET_KEY_C"] = "kk"
 app.config['SECRET_KEY'] = os.environ["SECRET_KEY_C"]
 socketio = SocketIO(app,cors_allowed_origins=['http://chat-py.herokuapp.com', 'http://127.0.0.1:5000'])
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ["HEROKU_POSTGRESQL_GREEN_URL"]
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ["HEROKU_POSTGRESQL_WHITE_URL"]
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 login_manager = LoginManager()
@@ -49,31 +51,29 @@ class activeSockets(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
 
-class all_rooms(db.Model):
+class allRooms(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     room_messages = db.Column(db.TEXT) # create one to many relationship to present the messages
     rooms = db.Column(db.TEXT) # change name to room
     room_password = db.Column(db.TEXT)
     room_owner = db.Column(db.TEXT)
 
-class friends_dms(db.Model):
+class friendsDms(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     first_user = db.Column(db.TEXT)
     second_user = db.Column(db.TEXT)
     first_user_unread_messages = db.Column(db.Integer)
     second_user_unread_messages = db.Column(db.Integer)
     room = db.Column(db.TEXT)
-    history = db.relationship('dm_history', backref='users_dms')
+    history = db.relationship('dmHistroy', backref='users_dms')
 
-class dm_history(db.Model):
+class dmHistroy(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     msg = db.Column(db.TEXT)
     msg_from_user = db.Column(db.TEXT)
     msg_time = db.Column(db.TEXT)
-    friends_dm_id = db.Column(db.Integer, db.ForeignKey('friends_dms.id')) 
+    friends_dm_id = db.Column(db.Integer, db.ForeignKey('friendsDms.id')) 
 
-
-# TD : check if the user already recived the friend request so I need to not be able to let him send it
 
 @app.route("/", methods=["GET"])
 @login_required
@@ -82,7 +82,7 @@ def index():
     for i in current_user.active_sockets:
         print("current open sockets of the user: ", end="")
         print(i.socket)
-    rooms = all_rooms.query.all()
+    rooms = allRooms.query.all()
     notifi = []
     user_friends = []
     last_message_time_with_friends = []
@@ -92,8 +92,8 @@ def index():
     private_rooms = []
     for i in current_user.notifications:
         notifi.append(i.notification)
-    friends_obj_o_1 = friends_dms.query.filter_by(first_user=current_user.username).first()
-    friends_obj_o_2 = friends_dms.query.filter_by(second_user=current_user.username).first()
+    friends_obj_o_1 = friendsDms.query.filter_by(first_user=current_user.username).first()
+    friends_obj_o_2 = friendsDms.query.filter_by(second_user=current_user.username).first()
     """
     if friends_obj_o_1 is not None:
         for i in range(len(friends_obj_o_1.history)):
@@ -212,7 +212,7 @@ def register():
         else:
             return render_template('/register.html')
 
-all_msgs_in_room = {} #this is to check if the quoted message exists because all of the main rooms doesn't have any histroy I can check on.
+all_msgs_in_room = {} #this is to check if the quoted message exists because all of the main rooms doesn't have any histroy I can check on. I know, bad practice.
 all_msgs_in_room["everyone"] = []
 @socketio.on('message')
 def handle_message(message):
@@ -224,7 +224,7 @@ def handle_message(message):
         print("In room")
         room=message["room"]
         print(message["room"])
-        friend_obj = friends_dms.query.filter_by(room=room).first()  
+        friend_obj = friendsDms.query.filter_by(room=room).first()  
         print(friend_obj) # should be none if it doesn't find it
         print(message)
         msg_njson = message["message"]
@@ -258,7 +258,7 @@ def handle_message(message):
                 your_obj.last_text_message = last_message
                 friends_obj.last_text_message = last_message
                 db.session.commit()
-                new_dm = dm_history(msg=last_message, msg_from_user=current_user.username, users_dms=friend_obj, msg_time=date)
+                new_dm = dmHistroy(msg=last_message, msg_from_user=current_user.username, users_dms=friend_obj, msg_time=date)
                 db.session.add(new_dm)
                 db.session.commit()
                 print("No exception")
@@ -307,7 +307,7 @@ def room_add(data):
     room_name_compare = room_name.lower()
     if room_name_compare == "main" or room_name_compare == "vanila" or room_name_compare == "chocolate":
         room_exist = True
-    rooms_obj = all_rooms.query.all()
+    rooms_obj = allRooms.query.all()
     for i in rooms_obj:
         if i.rooms.lower() == room_name_compare:
             room_exist = True
@@ -319,11 +319,11 @@ def room_add(data):
         room_password = data["room password"] # None for now
         print(room_password)
         password_is_dm = False
-        for i in friends_dms.query.all():
+        for i in friendsDms.query.all():
             if room_password == i.room:
                 password_is_dm = True
         if not password_is_dm:
-            add_new_room = all_rooms(rooms= room_name, room_password=room_password, room_owner= owner)
+            add_new_room = allRooms(rooms= room_name, room_password=room_password, room_owner= owner)
             db.session.add(add_new_room)
             db.session.commit()
             emit("room-add", {"msg" : "created!", "password" : room_password, "room" : room_name}) # send if the room is private or not
@@ -346,8 +346,10 @@ def on_join(data):
     print("join " + room)
     join_room(room)
     if dm == "True":
+        all_msgs_in_room["everyone"].append(current_user.username +' has entered the dm')
         send({"msg" : current_user.username +' has entered the dm', "server" : "yes", "time" : date}, room=room)
     else:
+        all_msgs_in_room["everyone"].append(current_user.username +' has entered ' + room)
         send({"msg" : current_user.username +' has entered ' + room, "server" : "yes", "time" : date}, room=room)
     
 @socketio.on('friend-add')
@@ -411,7 +413,7 @@ def friend_request_handler(data):
                     hash_salt = secrets.token_hex(6) # bascily creates 6 random chars and combines them to a string
                     room_hash = md5(str(current_user.username + requester.username + str(datetime.datetime.now()) + hash_salt).encode('utf-8')).hexdigest() # hashing MD5 with salt 
                     print(room_hash)
-                    create_dm = friends_dms(first_user=current_user.username, second_user=requester.username,room=room_hash)
+                    create_dm = friendsDms(first_user=current_user.username, second_user=requester.username,room=room_hash)
                     notifications.query.filter_by(notification=request_data, user_id=current_user.id).delete()
                     db.session.add(new_friend)
                     db.session.add(new_friend_requester)
@@ -444,9 +446,9 @@ def friends_dm(friend_username):
         if i.friend_name == friend_username:
             exist = True
     if exist:
-        dm_obj = friends_dms.query.filter_by(first_user=current_user.username, second_user=friend_username).first()
+        dm_obj = friendsDms.query.filter_by(first_user=current_user.username, second_user=friend_username).first()
         if dm_obj == None: #could be that the requester is trying to access the dm
-            dm_obj = friends_dms.query.filter_by(first_user=friend_username, second_user=current_user.username).first()
+            dm_obj = friendsDms.query.filter_by(first_user=friend_username, second_user=current_user.username).first()
         if dm_obj != None:
             emit("friends-dm", dm_obj.room)
         else:
@@ -463,7 +465,7 @@ def validate_room_password():
     print(room)
     print("val " + room)
     if room != "Main":
-        room_list = all_rooms.query.all()
+        room_list = allRooms.query.all()
         password = ""
         for i in room_list:
             if i.rooms == room:
@@ -478,9 +480,9 @@ def validate_room_password():
 
 @socketio.on("dm-history")
 def show_dm_history(friend_name):
-    dm_obj =  friends_dms.query.filter_by(first_user = current_user.username, second_user=friend_name).first()
+    dm_obj =  friendsDms.query.filter_by(first_user = current_user.username, second_user=friend_name).first()
     if dm_obj is None:
-        dm_obj =  friends_dms.query.filter_by(first_user = friend_name, second_user=current_user.username).first()
+        dm_obj =  friendsDms.query.filter_by(first_user = friend_name, second_user=current_user.username).first()
     if dm_obj is None:
         emit("dm-history", "the dm was not found in the db")
     else:
@@ -501,7 +503,7 @@ def show_dm_history(friend_name):
 
 @socketio.on('get-dm-data')
 def get_dm_data(room):
-    dm_obj = friends_dms.query.filter_by(room=room).first()
+    dm_obj = friendsDms.query.filter_by(room=room).first()
     if dm_obj is not None:
         print(request.sid)
         now = datetime.datetime.now()
