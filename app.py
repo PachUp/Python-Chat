@@ -9,11 +9,11 @@ import secrets
 import os
 import html
 app = Flask(__name__)
-os.environ["HEROKU_POSTGRESQL_WHITE_URL"] = "postgres://ojtvxaxmhxuomx:b81aea6c5808fceb7ada8f37ce620469e8c4376e1c9eb80602ca3855e8c328a3@ec2-54-247-103-43.eu-west-1.compute.amazonaws.com:5432/d2cnllir01pqij"
+os.environ["HEROKU_POSTGRESQL_COBALT_URL"] = "postgres://ftdjamnrxgqaer:52f876eecd4bc2918182945a308b28c0094360b792b1501cac132b33902ca225@ec2-54-247-103-43.eu-west-1.compute.amazonaws.com:5432/d9en4qb4th3lce"
 os.environ["SECRET_KEY_C"] = "kk"
 app.config['SECRET_KEY'] = os.environ["SECRET_KEY_C"]
 socketio = SocketIO(app,cors_allowed_origins=['http://chat-py.herokuapp.com', 'http://127.0.0.1:5000'])
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ["HEROKU_POSTGRESQL_WHITE_URL"]
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ["HEROKU_POSTGRESQL_COBALT_URL"]
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 login_manager = LoginManager()
@@ -58,7 +58,7 @@ class allRooms(db.Model):
     room_password = db.Column(db.TEXT)
     room_owner = db.Column(db.TEXT)
 
-class friendsDms(db.Model):
+class friendsdms(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     first_user = db.Column(db.TEXT)
     second_user = db.Column(db.TEXT)
@@ -72,7 +72,7 @@ class dmHistroy(db.Model):
     msg = db.Column(db.TEXT)
     msg_from_user = db.Column(db.TEXT)
     msg_time = db.Column(db.TEXT)
-    friends_dm_id = db.Column(db.Integer, db.ForeignKey('friendsDms.id')) 
+    friends_dm_id = db.Column(db.Integer, db.ForeignKey('friendsdms.id')) 
 
 
 @app.route("/", methods=["GET"])
