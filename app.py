@@ -9,11 +9,9 @@ import secrets
 import os
 import html
 app = Flask(__name__)
-os.environ["HEROKU_POSTGRESQL_COBALT_URL"] = "sqlite:///db1.db"
-os.environ["SECRET_KEY_C"] = "kk"
 app.config['SECRET_KEY'] = os.environ["SECRET_KEY_C"]
 socketio = SocketIO(app,cors_allowed_origins=['http://chat-py.herokuapp.com', 'http://127.0.0.1:5000'])
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ["HEROKU_POSTGRESQL_COBALT_URL"]
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ["HEROKU_POSTGRESQL_PUCE_URL"]
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 login_manager = LoginManager()
@@ -25,7 +23,7 @@ class users(db.Model, UserMixin):
     username = db.Column(db.TEXT)
     password = db.Column(db.TEXT)
     email = db.Column(db.TEXT)
-    profile_picture = db.Column(db.TEXT)
+    profile_picture = db.Column(db.TEXT, default="https://toppng.com/uploads/preview/user-font-awesome-nuevo-usuario-icono-11563566658mjtfvilgcs.png")
     active_sockets = db.relationship('activeSockets', backref='user_active_sockets')
     notifications = db.relationship('notifications', backref='user_notification')
     friends = db.relationship('friends', backref='user_friends')
@@ -84,6 +82,7 @@ def index():
     rooms = allRooms.query.all()
     notifi = []
     user_friends = []
+    friend_profile_pic = []
     last_message_time_with_friends = []
     last_message = []
     public_rooms = []
@@ -118,6 +117,7 @@ def index():
                 print(friend_obj_user.username)
                 print(len(friend_obj_user.active_sockets))
                 online_users.append(friend_obj_user.username) # I can do that because in the html file I loop though all the users by the same order
+                friend_profile_pic.append(friend_obj_user.profile_picture)
             else:
                 print("offline")
                 print(len(friend_obj_user.active_sockets))
@@ -130,7 +130,7 @@ def index():
         else:
             private_rooms.append(i.rooms)
     print(server_rooms)
-    return render_template("index.html", all_rooms=total_rooms,server_rooms= server_rooms,private_rooms=private_rooms,public_rooms=public_rooms ,notifications=notifi, user_friends=user_friends, username=current_user.username, last_message_time_with_friends=last_message_time_with_friends, last_message=last_message, online_users=online_users)
+    return render_template("index.html", all_rooms=total_rooms,server_rooms= server_rooms,private_rooms=private_rooms,public_rooms=public_rooms ,notifications=notifi, user_friends=user_friends, username=current_user.username, last_message_time_with_friends=last_message_time_with_friends, last_message=last_message, online_users=online_users, friend_profile_pic=friend_profile_pic)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -261,16 +261,16 @@ def handle_message(message):
                 db.session.add(new_dm)
                 db.session.commit()
                 print("No exception")
-                send({"msg" : message["message"], "user" : current_user.username, "time" : date, "server" : "no"}, room=room)
+                send({"msg" : message["message"], "user" : current_user.username, "time" : date, "server" : "no", "user profile picture": current_user.profile_picture}, room=room)
         else:
-            send({"msg" : message["message"], "user" : current_user.username, "time" : date, "server" : "no"}, room=room)
+            send({"msg" : message["message"], "user" : current_user.username, "time" : date, "server" : "no", "user profile picture": current_user.profile_picture}, room=room)
     except Exception as e:
         print(e)
         print(type(message)) # server message
         if message == "Connected!":
             msg_in_room = all_msgs_in_room["everyone"]
             msg_in_room.append(current_user.username +" Has " + message)
-            send({"msg" : current_user.username +" Has " + message, "time" : date, "server" : "yes"})
+            send({"msg" : current_user.username +" Has " + message, "time" : date, "server" : "yes", "user profile picture": current_user.profile_picture})
 
 def message_quote(message_with_quote, msg_in_room):
     print("quote")
@@ -347,10 +347,10 @@ def on_join(data):
     join_room(room)
     if dm == "True":
         all_msgs_in_room["everyone"].append(current_user.username +' has entered the dm')
-        send({"msg" : current_user.username +' has entered the dm', "server" : "yes", "time" : date}, room=room)
+        send({"msg" : current_user.username +' has entered the dm', "server" : "yes", "time" : date, "user profile picture": current_user.profile_picture}, room=room) 
     else:
         all_msgs_in_room["everyone"].append(current_user.username +' has entered ' + room)
-        send({"msg" : current_user.username +' has entered ' + room, "server" : "yes", "time" : date}, room=room)
+        send({"msg" : current_user.username +' has entered ' + room, "server" : "yes", "time" : date, "user profile picture": current_user.profile_picture}, room=room)
     
 @socketio.on('friend-add')
 def friend_add(data):
@@ -490,15 +490,18 @@ def show_dm_history(friend_name):
         sent_user = []
         user_msg = []
         msg_time = []
+        user_profile_pic =[]
         for i in dm_obj.history:
             user_msg.append(i.msg) 
             sent_user.append(i.msg_from_user)
             msg_time.append(i.msg_time)
+            user_profile_pic.append(users.query.filter_by(username=i.msg_from_user).first().profile_picture)
         chat_history["user"] = sent_user
         chat_history["msg"] = user_msg
         chat_history["room"] = dm_obj.room
         chat_history["friend"] = friend_name
         chat_history["time"] = msg_time
+        chat_history["profile picture"] = user_profile_pic
         emit("dm-history", chat_history)
 
 @socketio.on('get-dm-data')
@@ -563,9 +566,11 @@ def send_notificaton_live(data):
 def user_typing(data):
     emit("user-typing", {"typing" : data["typing"], "user" : data["user"]}, room=data["room"])
 
-@socketio.on('profile-picture')
+@socketio.on('update-profile-picture')
 def profile_picture(data):
-    pass
+    picture_url = data["picture url"]
+    current_user.profile_picture = picture_url
+    db.session.commit()
 
 @socketio.on('leave')
 def on_leave(data):

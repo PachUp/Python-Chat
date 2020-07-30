@@ -102,6 +102,7 @@
       <div class="modal-body mx-3">
         <div class="md-form mb-5">
           <label data-error="wrong" data-success="right">enter image URL (recommended size 50x50)</label>
+          <footer class="blockquote-footer">The allowed types are: <cite title="Source Title">.jpeg|.jpg|.gif|.png</cite></footer>
           <input class="form-control" id="profile-pic-input">
           <img id="picture-preview" src="" class="avatar rounded-circle d-flex align-self-center img-thumbnail mx-auto" height="50" width="50"></img>
         </div>
@@ -152,7 +153,7 @@
                           {%else%}
                             <i class="fa fa-circle user-status" aria-hidden="true" style="color:green"></i>
                           {%endif%}
-                          <img src="https://i.imagesup.co/images2/1457001_be54e9a3-e0c3-473f-bece-3fce42302a31.jpg" alt="avatar" class="avatar rounded-circle d-flex align-self-center mr-2 z-depth-1" height="50px" width="50px">
+                          <img src={{friend_profile_pic[i]}} alt="avatar" class="avatar rounded-circle d-flex align-self-center mr-2 z-depth-1" height="50px" width="50px">
                           <button type="button" class="btn btn-primary friend-username">{{user_friends[i]}}</button>
                           <p class="last-message text-muted">{{last_message[i]}}</p>
                         </div>
@@ -215,7 +216,7 @@
         username = obj["user"]
         }
         else{
-            msg = addNewlines(obj["msg"]) // not really needed but it's fine
+            msg = addNewlines(obj["msg"]) // not necessary but it's fine
             username = "Server"
         }
         var entites = "";
@@ -223,7 +224,7 @@
         var create_msg = `<li class="d-flex justify-content-between mb-4">
                         <div class="chat-body white p-3 ml-2 z-depth-1">
                             <div class="header">
-                              <img id="picture-preview" src="https://i.imagesup.co/images2/1457001_be54e9a3-e0c3-473f-bece-3fce42302a31.jpg" class="avatar rounded-circle d-flex align-self-center img-thumbnail" height="50" width="50"></img>
+                              <img id="picture-preview" src="` + obj["user profile picture"] + `" class="avatar rounded-circle d-flex align-self-center img-thumbnail" height="50" width="50"></img>
                                 <strong class="primary-font">`+ username +`</strong>
                                 <small class="text-muted"><i class="far fa-clock"></i>` + obj["time"] + `</small>
                                 <div class="dropdown">
@@ -426,39 +427,41 @@
         socket.emit("friends-dm", friend)
         socket.emit("dm-history", friend)
         socket.on("dm-history", function(data){
-        if(data == "the dm was not found in the db"){
-        toastr["error"](data,data)
-        }
-        else{
-        var sent_user = data["user"] // array
-        var user_msg = data["msg"] // array same length
-        var msg_time = data["time"] // array same length
-        if(entered_room != room){
-            $("#messages").html("")
-            for(var i = 0; i<user_msg.length; i++){
-            $("#messages").append(`
-            <li class="d-flex justify-content-between mb-4">
-                <div class="chat-body white p-3 ml-2 z-depth-1">
-                  <div class="header">
-                    <strong class="primary-font">` + sent_user[i] +`</strong>
-                    <small class="text-muted"><i class="far fa-clock"></i>` + msg_time[i] + `</small>
-                    <div class="dropdown">
-                      <p class="pull-right fa fa-ellipsis-v" aria-hidden="true" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></p>
-                        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                          <a class="dropdown-item message-quote" user="`+ sent_user[i] +`" message="` + user_msg[i] +`">Quote ` + sent_user[i] +`</a>
-                        </div>
+          if(data == "the dm was not found in the db"){
+            toastr["error"](data,data)
+          }
+          else{
+          var sent_user = data["user"] // array
+          var user_msg = data["msg"] // array same length
+          var msg_time = data["time"] // array same length
+          var user_profile_pic = data["profile picture"]
+          if(entered_room != room){
+              $("#messages").html("")
+              for(var i = 0; i<user_msg.length; i++){
+              $("#messages").append(`
+              <li class="d-flex justify-content-between mb-4">
+                  <div class="chat-body white p-3 ml-2 z-depth-1">
+                    <div class="header">
+                      <img id="picture-preview" src="` + user_profile_pic[i] +`" class="avatar rounded-circle d-flex align-self-center img-thumbnail" height="50" width="50"></img>
+                      <strong class="primary-font">` + sent_user[i] +`</strong>
+                      <small class="text-muted"><i class="far fa-clock"></i>` + msg_time[i] + `</small>
+                      <div class="dropdown">
+                        <p class="pull-right fa fa-ellipsis-v" aria-hidden="true" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></p>
+                          <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                            <a class="dropdown-item message-quote" user="`+ sent_user[i] +`" message="` + user_msg[i] +`">Quote ` + sent_user[i] +`</a>
+                          </div>
+                      </div>
                     </div>
+                      <hr class="w-100">
+                      <p>`+ user_msg[i] + `</p>
                   </div>
-                    <hr class="w-100">
-                    <p>`+ user_msg[i] + `</p>
-                </div>
-            </li>
-            `)
-            }
+              </li>
+              `)
+              }
             $('.friend-name > #' + data["friend"]).html(user_msg[user_msg.length - 1]);
+          }
         }
-        }
-        });
+      });
     });
     socket.on("friends-dm", function(data){
         if(room == data){
@@ -551,20 +554,17 @@
       }
     });
     $("#profile-picture-btn").click(function(){
-      console.log("dsd")
       $("#picture-preview").attr("src", $("#profile-pic-input").val())
       profile_pic = $("#profile-pic-input").val()
       image_width = $("#picture-preview").prop('naturalWidth');
-      
       if(profile_pic.match(/\.(jpeg|jpg|gif|png)$/) != null){
-          console.log("fgffff")
           console.log(image_width)
         if(image_width > 0){
           console.log("fg")
+          socket.emit("update-profile-picture", {"picture url" : profile_pic})
           toastr["success"]("Your image is loaded!", "Loading the image")
         }
         else{
-          console.log("fgf")
           toastr["error"]("There was a problem loading the image", "Image error")
         }
       }
