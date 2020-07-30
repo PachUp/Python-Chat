@@ -153,7 +153,7 @@
                           {%else%}
                             <i class="fa fa-circle user-status" aria-hidden="true" style="color:green"></i>
                           {%endif%}
-                          <img src={{friend_profile_pic[i]}} alt="avatar" class="avatar rounded-circle d-flex align-self-center mr-2 z-depth-1" height="50px" width="50px">
+                          <img src="{{friend_profile_pic[i]}}" class="avatar rounded-circle d-flex align-self-center img-thumbnail mx-auto" height="50px" width="50px">
                           <button type="button" class="btn btn-primary friend-username">{{user_friends[i]}}</button>
                           <p class="last-message text-muted">{{last_message[i]}}</p>
                         </div>
@@ -224,7 +224,7 @@
         var create_msg = `<li class="d-flex justify-content-between mb-4">
                         <div class="chat-body white p-3 ml-2 z-depth-1">
                             <div class="header">
-                              <img id="picture-preview" src="` + obj["user profile picture"] + `" class="avatar rounded-circle d-flex align-self-center img-thumbnail" height="50" width="50"></img>
+                              <img id="picture-preview" src="` + obj["user profile picture"] + `" class="avatar rounded-circle d-flex align-self-center img-thumbnail mx-auto" height="50" width="50"></img>
                                 <strong class="primary-font">`+ username +`</strong>
                                 <small class="text-muted"><i class="far fa-clock"></i>` + obj["time"] + `</small>
                                 <div class="dropdown">
@@ -622,7 +622,7 @@
             <a class="d-flex justify-content-between">
             <div class="text-small">
                 <i class="fa fa-circle user-status" aria-hidden="true" style="color:` + color + `"></i>
-                <img src=` + friend_profile_picture + ` alt="avatar" class="avatar rounded-circle d-flex align-self-center mr-2 z-depth-1" height="50px" width="50px">
+                <img src="` + friend_profile_picture + `" class="avatar rounded-circle d-flex align-self-center img-thumbnail mx-auto" height="50px" width="50px">
                 <button type="button" class="btn btn-primary friend-username">` + friend_name + `</button>
                 <p class="last-message text-muted"></p>
             </div>

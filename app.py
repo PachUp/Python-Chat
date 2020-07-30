@@ -112,12 +112,12 @@ def index():
         if friend_obj_user is not None:
             if friend_obj_user.username == current_user.username:
                 continue
+            friend_profile_pic.append(friend_obj_user.profile_picture)
             if len(friend_obj_user.active_sockets) > 0:
                 print("online")
                 print(friend_obj_user.username)
                 print(len(friend_obj_user.active_sockets))
                 online_users.append(friend_obj_user.username) # I can do that because in the html file I loop though all the users by the same order
-                friend_profile_pic.append(friend_obj_user.profile_picture)
             else:
                 print("offline")
                 print(len(friend_obj_user.active_sockets))
