@@ -422,7 +422,7 @@ def friend_request_handler(data):
                     user_status = "offline"
                     if(len(requester.active_sockets) > 0):
                         user_status = "online"
-                    emit("friend-request-handler", {"msg" : "The friend was added!", "notification": request_data, "type" : request_status, "name" : request_name, "user status": user_status})
+                    emit("friend-request-handler", {"msg" : "The friend was added!", "notification": request_data, "type" : request_status, "name" : request_name, "user status": user_status, "profile picture" : requester.profile_picture})
                     action = True
                     break
                 else:
@@ -550,7 +550,7 @@ def add_friend_requester_live(data):
     if len(user_obj.active_sockets) > 0:
         user_status = "online"
         for i in user_obj.active_sockets:
-            emit("add-friend-requester-live",{"friend" : data["requester"], "accepted from" : data["accepted from"], "user status" : user_status},room=i.socket)
+            emit("add-friend-requester-live",{"friend" : data["requester"], "accepted from" : data["accepted from"], "user status" : user_status, "profile picture" : user_obj.profile_picture},room=i.socket)
 
 @socketio.on("send-notificaton-live")
 def send_notificaton_live(data):
