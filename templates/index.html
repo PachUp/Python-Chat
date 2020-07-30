@@ -101,9 +101,9 @@
       </div>
       <div class="modal-body mx-3">
         <div class="md-form mb-5">
-          <label data-error="wrong" data-success="right">enter image URL (recommended size 100x100)</label>
+          <label data-error="wrong" data-success="right">enter image URL (recommended size 50x50)</label>
           <input class="form-control" id="profile-pic-input">
-          <img id="picture-preview" src="" class="avatar rounded-circle d-flex align-self-center img-thumbnail mx-auto"></img>
+          <img id="picture-preview" src="" class="avatar rounded-circle d-flex align-self-center img-thumbnail mx-auto" height="50" width="50"></img>
         </div>
       </div>
       <div class="modal-footer d-flex justify-content-center">
@@ -552,21 +552,24 @@
     });
     $("#profile-picture-btn").click(function(){
       console.log("dsd")
-      $("#profile-pic-input").val()
-      if(url.match(/\.(jpeg|jpg|gif|png)$/) != null){
-        $.ajax({
-          url: $("#profile-pic-input").val(),
-          type:'HEAD',
-          error: function(){
-              toastr["error"]("There was a problem loading the image", "Image error")
-          },
-          success: function(){
-            toastr["success"]("Your image is getting loaded!", "Loading the image")
-          }
-        });
+      $("#picture-preview").attr("src", $("#profile-pic-input").val())
+      profile_pic = $("#profile-pic-input").val()
+      image_width = $("#picture-preview").prop('naturalWidth');
+      
+      if(profile_pic.match(/\.(jpeg|jpg|gif|png)$/) != null){
+          console.log("fgffff")
+          console.log(image_width)
+        if(image_width > 0){
+          console.log("fg")
+          toastr["success"]("Your image is loaded!", "Loading the image")
+        }
+        else{
+          console.log("fgf")
+          toastr["error"]("There was a problem loading the image", "Image error")
+        }
       }
       else{
-        toastr["error"]("Type a valid image URL Allowed types:.jpeg|.jpg|.gif|.png", "Image error")
+        toastr["error"]("Type a valid image URL. Allowed types:.jpeg|.jpg|.gif|.png", "Image error")
       }
       
     });
