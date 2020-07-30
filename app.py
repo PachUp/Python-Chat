@@ -9,7 +9,7 @@ import secrets
 import os
 import html
 app = Flask(__name__)
-os.environ["HEROKU_POSTGRESQL_COBALT_URL"] = "postgres://ftdjamnrxgqaer:52f876eecd4bc2918182945a308b28c0094360b792b1501cac132b33902ca225@ec2-54-247-103-43.eu-west-1.compute.amazonaws.com:5432/d9en4qb4th3lce"
+os.environ["HEROKU_POSTGRESQL_COBALT_URL"] = "sqlite:///db1.db"
 os.environ["SECRET_KEY_C"] = "kk"
 app.config['SECRET_KEY'] = os.environ["SECRET_KEY_C"]
 socketio = SocketIO(app,cors_allowed_origins=['http://chat-py.herokuapp.com', 'http://127.0.0.1:5000'])
@@ -19,14 +19,13 @@ db = SQLAlchemy(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 server_rooms = ["Main", "Vanila", "Chocolate"] # a 'const' var
-
-# TD: need to change databases names to the pip8 standards
  
 class users(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key = True)
     username = db.Column(db.TEXT)
     password = db.Column(db.TEXT)
     email = db.Column(db.TEXT)
+    profile_picture = db.Column(db.TEXT)
     active_sockets = db.relationship('activeSockets', backref='user_active_sockets')
     notifications = db.relationship('notifications', backref='user_notification')
     friends = db.relationship('friends', backref='user_friends')
@@ -563,6 +562,10 @@ def send_notificaton_live(data):
 @socketio.on('user-typing')
 def user_typing(data):
     emit("user-typing", {"typing" : data["typing"], "user" : data["user"]}, room=data["room"])
+
+@socketio.on('profile-picture')
+def profile_picture(data):
+    pass
 
 @socketio.on('leave')
 def on_leave(data):

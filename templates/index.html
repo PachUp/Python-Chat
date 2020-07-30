@@ -108,6 +108,7 @@
       </div>
       <div class="modal-footer d-flex justify-content-center">
         <button class="btn btn-default" id="profile-picture-btn">Ok</button>
+        <button class="btn btn-default" id="profile-picture-preview-btn">Preview</button>
       </div>
     </div>
   </div>
@@ -151,12 +152,13 @@
                           {%else%}
                             <i class="fa fa-circle user-status" aria-hidden="true" style="color:green"></i>
                           {%endif%}
+                          <img src="https://i.imagesup.co/images2/1457001_be54e9a3-e0c3-473f-bece-3fce42302a31.jpg" alt="avatar" class="avatar rounded-circle d-flex align-self-center mr-2 z-depth-1" height="50px" width="50px">
                           <button type="button" class="btn btn-primary friend-username">{{user_friends[i]}}</button>
                           <p class="last-message text-muted">{{last_message[i]}}</p>
                         </div>
                         <div class="chat-footer">
                           {% if last_message_time_with_friends[i] is defined %} <!--could be a server msg-->
-                            <p class="text-smaller text-muted mb-0 date">⠀{{last_message_time_with_friends[i]}}</p> <!--should be the same length-->
+                            <p class="text-smaller text-muted mb-0 date">{{last_message_time_with_friends[i]}}</p> <!--should be the same length-->
                           {% endif %}
                           <span class="text-muted float-right"><i class="fas fa-mail-reply" aria-hidden="true"></i></span>
                         </div>
@@ -221,6 +223,7 @@
         var create_msg = `<li class="d-flex justify-content-between mb-4">
                         <div class="chat-body white p-3 ml-2 z-depth-1">
                             <div class="header">
+                              <img id="picture-preview" src="https://i.imagesup.co/images2/1457001_be54e9a3-e0c3-473f-bece-3fce42302a31.jpg" class="avatar rounded-circle d-flex align-self-center img-thumbnail" height="50" width="50"></img>
                                 <strong class="primary-font">`+ username +`</strong>
                                 <small class="text-muted"><i class="far fa-clock"></i>` + obj["time"] + `</small>
                                 <div class="dropdown">
@@ -547,11 +550,28 @@
         $("#user-t" + data["user"]).replaceWith("")
       }
     });
-    $("#profile-picture-btn").click(function(){ //TD: make a seprerate button for image preview and image submission
-      //picture-preview
+    $("#profile-picture-btn").click(function(){
       console.log("dsd")
+      $("#profile-pic-input").val()
+      if(url.match(/\.(jpeg|jpg|gif|png)$/) != null){
+        $.ajax({
+          url: $("#profile-pic-input").val(),
+          type:'HEAD',
+          error: function(){
+              toastr["error"]("There was a problem loading the image", "Image error")
+          },
+          success: function(){
+            toastr["success"]("Your image is getting loaded!", "Loading the image")
+          }
+        });
+      }
+      else{
+        toastr["error"]("Type a valid image URL Allowed types:.jpeg|.jpg|.gif|.png", "Image error")
+      }
+      
+    });
+    $("#profile-picture-preview-btn").click(function(){
       $("#picture-preview").attr("src", $("#profile-pic-input").val())
-      location.reload()
     });
     function addNewlines(str) {
     var result = '';
