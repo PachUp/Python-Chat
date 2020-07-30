@@ -90,6 +90,29 @@
   </div>
 </div>
 
+<div class="modal fade" id="modalProfilePicture" tabindex="-1" role="dialog" aria-labelledby="profile-pic-aria" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">Profile picture</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <label data-error="wrong" data-success="right">enter image URL (recommended size 100x100)</label>
+          <input class="form-control" id="profile-pic-input">
+          <img id="picture-preview" src="" class="avatar rounded-circle d-flex align-self-center img-thumbnail mx-auto"></img>
+        </div>
+      </div>
+      <div class="modal-footer d-flex justify-content-center">
+        <button class="btn btn-default" id="profile-picture-btn">Ok</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="text-center">
     <div class="card purple lighten-4 chat-room">
         <div class="card-body">
@@ -234,9 +257,9 @@
         new_room = data["room"]
         toastr["success"]("You have joined" + new_room, "Room created")
         $(document).ready(function(){
+            stoppedTyping();
             socket.emit('leave', {"room" : room})
             socket.emit("join", {"room" : new_room})
-            stoppedTyping();
         });
         room = new_room
         $("#modalAddRoom .close").click()
@@ -277,9 +300,9 @@
                 }
                 else{
                 $("#messages").html("");
+                stoppedTyping();
                 socket.emit('leave', {"room" : room})
                 socket.emit("join", {"room" : new_room})
-                stoppedTyping();
                 var room_msg = "You have joined " + new_room
                 toastr["success"](room_msg, "Room joined")
                 room = new_room
@@ -295,9 +318,9 @@
         $("#messages").html("");
         $("#password-validation .close").click()
         toastr["success"]("Entering you into the room!", "Corrent password")
+        stoppedTyping();
         socket.emit('leave', {"room" : room})
         socket.emit("join", {"room" : new_room})
-        stoppedTyping();
         room = new_room
         }
         else{
@@ -444,10 +467,10 @@
         else{
         $("#messages").html("");
         toastr["success"]("Going to the dm's", "dm")
+        stoppedTyping();
         socket.emit('leave', {"room" : room, "dm" : "True"})
         socket.emit("join", {"room" : data, "dm" : "True"})
         $("#messages").animate({ scrollTop: $('#messages').prop("scrollHeight")}, 500);
-        stoppedTyping();
         room = data;
         }
     }); 
@@ -523,6 +546,12 @@
         console.log(ty)
         $("#user-t" + data["user"]).replaceWith("")
       }
+    });
+    $("#profile-picture-btn").click(function(){ //TD: make a seprerate button for image preview and image submission
+      //picture-preview
+      console.log("dsd")
+      $("#picture-preview").attr("src", $("#profile-pic-input").val())
+      location.reload()
     });
     function addNewlines(str) {
     var result = '';

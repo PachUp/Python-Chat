@@ -291,6 +291,7 @@ def message_quote(message_with_quote, msg_in_room):
             quote_msg = quote_msg.replace("<br />", "", 1)
             print(all_msgs_in_room["everyone"])
             print(msg_in_room)
+            print(quote_msg)
             if quote_msg.strip() in msg_in_room or quote_msg.strip() in all_msgs_in_room["everyone"]:    
                 new_msg = '<footer class="blockquote-footer"><cite title="Source Title">By ' + user +': </cite>' + quote_msg +'</footer>' + actual_message
                 print(new_msg)
