@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_socketio import SocketIO, send, join_room, leave_room, emit
 from flask_login import LoginManager, UserMixin, login_user, login_required, current_user, logout_user
 from sqlalchemy import func
+import html.parser
 from hashlib import md5
 import datetime
 import secrets
