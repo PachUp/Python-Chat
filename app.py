@@ -269,7 +269,7 @@ def handle_message(message):
                     print("No exception")
                     send({"msg" : last_message, "user" : current_user.username, "time" : date, "server" : "no", "user profile picture": current_user.profile_picture}, room=room)
             else:
-                send({"msg" : message["message"], "user" : current_user.username, "time" : date, "server" : "no", "user profile picture": current_user.profile_picture}, room=room)
+                send({"msg" : html.escape(message["message"]), "user" : current_user.username, "time" : date, "server" : "no", "user profile picture": current_user.profile_picture}, room=room)
     except Exception as e:
         print(e)
         print(type(message)) # server message
