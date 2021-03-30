@@ -228,45 +228,48 @@ def handle_message(message):
         print(friend_obj) # should be none if it doesn't find it
         print(message)
         msg_njson = message["message"]
-        msg_njson = html.escape(msg_njson)
-        msg_in_room = all_msgs_in_room[room]
-        msg_in_room.append(msg_njson)
-        print(msg_njson.startswith("[QUOTE "))
-        print(msg_in_room)
-        if(msg_njson.startswith("[QUOTE ")):
-            print("pre quote")
-            message["message"] = message_quote(msg_njson, msg_in_room)
-        if friend_obj is not None:
-            if current_user.username != friend_obj.first_user and current_user.username != friend_obj.second_user:
-               emit("friend-add", "an unexpected error has occurred") # I did friend-add because it will show that there was a problem in toastr. it will happen if the user inspected the elemet to a diffrent user
-            else: 
-                print("not none2")
-                print(message["message"])
-                last_message = message["message"]
-                last_message = html.escape(last_message)
-                friend = ""
-                you = ""
-                if friend_obj.first_user == current_user.username:
-                    you = friend_obj.first_user
-                    friend = friend_obj.second_user
-                else:
-                    you = friend_obj.second_user
-                    friend = friend_obj.first_user
-                print(you)
-                print(friend)
-                friends_obj = friends.query.filter_by(friend_name=friend, user_friends=current_user).first()
-                friend_obj_user = users.query.filter_by(username=friend).first()
-                your_obj = friends.query.filter_by(friend_name=current_user.username, user_friends=friend_obj_user).first()
-                your_obj.last_text_message = last_message
-                friends_obj.last_text_message = last_message
-                db.session.commit()
-                new_dm = dmHistroy(msg=last_message, msg_from_user=current_user.username, users_dms=friend_obj, msg_time=date)
-                db.session.add(new_dm)
-                db.session.commit()
-                print("No exception")
-                send({"msg" : message["message"], "user" : current_user.username, "time" : date, "server" : "no", "user profile picture": current_user.profile_picture}, room=room)
+        if len(msg_njson) > 100 or len(room) > 100:
+            emit("len", "The max amount of characters is 100!") 
         else:
-            send({"msg" : message["message"], "user" : current_user.username, "time" : date, "server" : "no", "user profile picture": current_user.profile_picture}, room=room)
+            msg_njson = html.escape(msg_njson)
+            msg_in_room = all_msgs_in_room[room]
+            msg_in_room.append(msg_njson)
+            print(msg_njson.startswith("[QUOTE "))
+            print(msg_in_room)
+            if(msg_njson.startswith("[QUOTE ")):
+                print("pre quote")
+                message["message"] = message_quote(msg_njson, msg_in_room)
+            if friend_obj is not None:
+                if current_user.username != friend_obj.first_user and current_user.username != friend_obj.second_user:
+                    emit("friend-add", "an unexpected error has occurred") # I did friend-add because it will show that there was a problem in toastr. it will happen if the user inspected the elemet to a diffrent user
+                else: 
+                    print("not none2")
+                    print(message["message"])
+                    last_message = message["message"]
+                    last_message = html.escape(last_message)
+                    friend = ""
+                    you = ""
+                    if friend_obj.first_user == current_user.username:
+                        you = friend_obj.first_user
+                        friend = friend_obj.second_user
+                    else:
+                        you = friend_obj.second_user
+                        friend = friend_obj.first_user
+                    print(you)
+                    print(friend)
+                    friends_obj = friends.query.filter_by(friend_name=friend, user_friends=current_user).first()
+                    friend_obj_user = users.query.filter_by(username=friend).first()
+                    your_obj = friends.query.filter_by(friend_name=current_user.username, user_friends=friend_obj_user).first()
+                    your_obj.last_text_message = last_message
+                    friends_obj.last_text_message = last_message
+                    db.session.commit()
+                    new_dm = dmHistroy(msg=last_message, msg_from_user=current_user.username, users_dms=friend_obj, msg_time=date)
+                    db.session.add(new_dm)
+                    db.session.commit()
+                    print("No exception")
+                    send({"msg" : message["message"], "user" : current_user.username, "time" : date, "server" : "no", "user profile picture": current_user.profile_picture}, room=room)
+            else:
+                send({"msg" : message["message"], "user" : current_user.username, "time" : date, "server" : "no", "user profile picture": current_user.profile_picture}, room=room)
     except Exception as e:
         print(e)
         print(type(message)) # server message

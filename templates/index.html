@@ -523,6 +523,9 @@
         }
       });
     });
+    socket.on("len", function(data){
+      toastr["error"](data)
+    });
     var typingTimer;
     $('#input').keyup(function(){
         if(!typing){
