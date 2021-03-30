@@ -267,7 +267,7 @@ def handle_message(message):
                     db.session.add(new_dm)
                     db.session.commit()
                     print("No exception")
-                    send({"msg" : message["message"], "user" : current_user.username, "time" : date, "server" : "no", "user profile picture": current_user.profile_picture}, room=room)
+                    send({"msg" : last_message, "user" : current_user.username, "time" : date, "server" : "no", "user profile picture": current_user.profile_picture}, room=room)
             else:
                 send({"msg" : message["message"], "user" : current_user.username, "time" : date, "server" : "no", "user profile picture": current_user.profile_picture}, room=room)
     except Exception as e:
