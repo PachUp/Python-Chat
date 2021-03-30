@@ -243,6 +243,7 @@ def handle_message(message):
                 print("not none2")
                 print(message["message"])
                 last_message = message["message"]
+                last_message = html.escape(last_message)
                 friend = ""
                 you = ""
                 if friend_obj.first_user == current_user.username:
