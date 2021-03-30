@@ -526,21 +526,24 @@
     socket.on("len", function(data){
       toastr["error"](data)
     });
-    var typingTimer;
     $('#input').keyup(function(){
         if(!typing){
           socket.emit("user-typing", {"typing" : "True", "user" : "{{username}}", "room" : room})
         }
         typing = true;
-        clearTimeout(typingTimer);
-        if ($('#input').val()) {
-            console.log("typing")
-            typingTimer = setTimeout(stoppedTyping, 5000);
-        }
-        else{
-          stoppedTyping();
-        }
+        
     });
+    setInterval(function(){
+      var typingTimer;
+      if ($('#input').val()){
+          clearTimeout(typingTimer);
+          console.log("typing")
+          typingTimer = setTimeout(stoppedTyping, 5000);
+      }
+      else{
+        stoppedTyping();
+      }
+    }, 3000)
     function stoppedTyping() {
         typing = false;
         socket.emit("user-typing", {"typing" : "False", "user" : "{{username}}", "room" : room})
