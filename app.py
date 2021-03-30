@@ -3,7 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_socketio import SocketIO, send, join_room, leave_room, emit
 from flask_login import LoginManager, UserMixin, login_user, login_required, current_user, logout_user
 from sqlalchemy import func
-import html.parser
+import html
 from hashlib import md5
 import datetime
 import secrets
@@ -228,6 +228,7 @@ def handle_message(message):
         print(friend_obj) # should be none if it doesn't find it
         print(message)
         msg_njson = message["message"]
+        msg_njson = html.escape(msg_njson)
         msg_in_room = all_msgs_in_room[room]
         msg_in_room.append(msg_njson)
         print(msg_njson.startswith("[QUOTE "))
